@@ -570,6 +570,70 @@ Deno.serve(async (req) => {
     const cb_data = String(cq.data ?? "");
     try { await tg("answerCallbackQuery", { callback_query_id: cq.id }); } catch { /* ignore */ }
 
+    // ---- payment method / withdrawal approval (admin only) ----
+    if (cb_chat_id && (cb_data.startsWith("pm:") || cb_data.startsWith("wd:"))) {
+      if (!(await isAdmin(cb_chat_id))) {
+        await reply(cb_chat_id, "⛔ Admins only.");
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+      const [kind, action, id] = cb_data.split(":");
+      const approved = action === "ok";
+
+      if (kind === "pm" && id) {
+        const newStatus = approved ? "approved" : "rejected";
+        const { data: row } = await db.from("user_payment_methods")
+          .update({ status: newStatus }).eq("id", id).select("user_id, label").maybeSingle();
+        if (row) {
+          await db.from("notifications").insert({
+            user_id: row.user_id,
+            type: "payment_method",
+            title: approved ? "تمت الموافقة على طريقة الدفع" : "تم رفض طريقة الدفع",
+            message: approved
+              ? `تمت الموافقة على "${row.label}". يمكنك الآن استخدامها للسحب.`
+              : `تم رفض طريقة الدفع "${row.label}". راسلنا للمزيد.`,
+            metadata: { method_id: id, status: newStatus },
+          });
+        }
+        try {
+          await tg("editMessageReplyMarkup", {
+            chat_id: cb_chat_id,
+            message_id: cq.message?.message_id,
+            reply_markup: { inline_keyboard: [[{ text: approved ? "✅ تمت الموافقة" : "❌ مرفوض", callback_data: "noop" }]] },
+          });
+        } catch { /* ignore */ }
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+
+      if (kind === "wd" && id) {
+        const newStatus = approved ? "paid" : "rejected";
+        const { data: row } = await db.from("withdrawal_requests")
+          .update({ status: newStatus, processed_at: new Date().toISOString() })
+          .eq("id", id).select("user_id, amount").maybeSingle();
+        if (row) {
+          await db.from("notifications").insert({
+            user_id: row.user_id,
+            type: "withdrawal",
+            title: approved ? "تم تنفيذ السحب" : "تم رفض طلب السحب",
+            message: approved
+              ? `تم إرسال $${Number(row.amount).toFixed(2)} إلى طريقة الدفع الخاصة بك.`
+              : `تم رفض طلب سحب بقيمة $${Number(row.amount).toFixed(2)}.`,
+            metadata: { withdrawal_id: id, status: newStatus },
+          });
+        }
+        try {
+          await tg("editMessageReplyMarkup", {
+            chat_id: cb_chat_id,
+            message_id: cq.message?.message_id,
+            reply_markup: { inline_keyboard: [[{ text: approved ? "✅ مدفوع" : "❌ مرفوض", callback_data: "noop" }]] },
+          });
+        } catch { /* ignore */ }
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    }
+
+
+
     // ---- menu navigation ----
     if (cb_chat_id && (cb_data === "menu:main" || cb_data.startsWith("cat:") || cb_data.startsWith("svc:") || cb_data.startsWith("delkey:") || cb_data.startsWith("addkey:") || cb_data === "gallery:help" || cb_data.startsWith("tooltpl:") || cb_data.startsWith("landing:") || cb_data === "codeprompt:add")) {
       if (!(await isAdmin(cb_chat_id))) {
