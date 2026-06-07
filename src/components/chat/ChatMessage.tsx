@@ -10,6 +10,7 @@ import MegsyStar from "@/components/files/MegsyStar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import rehypeRaw from "rehype-raw";
 import { visit, SKIP } from "unist-util-visit";
 import { toString } from "mdast-util-to-string";
 import { toast } from "sonner";
@@ -268,6 +269,7 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
 }) => (
   <ReactMarkdown
     remarkPlugins={[remarkGfm, remarkBreaks, remarkCleanResearchLayout]}
+    rehypePlugins={[rehypeRaw]}
     components={{
       p: ({ children }) => <p><BidiText>{children}</BidiText></p>,
       li: ({ children }) => <li><BidiText>{children}</BidiText></li>,
@@ -310,15 +312,16 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
       ),
       hr: () => <hr className="my-6 border-0 border-t border-border" />,
       table: ({ children }) => (
-        <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-border bg-card">
-          <table className="w-full border-collapse text-start text-[13px]">{children}</table>
+        <div className="my-5 max-w-full overflow-x-auto rounded-xl border border-border/70 bg-card/40 shadow-sm">
+          <table className="w-full border-collapse text-start text-[13.5px]">{children}</table>
         </div>
       ),
-      thead: ({ children }) => <thead className="bg-muted/40">{children}</thead>,
-      tbody: ({ children }) => <tbody>{children}</tbody>,
-      tr: ({ children }) => <tr className="border-b border-border last:border-0 transition-colors hover:bg-muted/30">{children}</tr>,
-      th: ({ children }) => <th className="px-4 py-2.5 text-start text-[11px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border">{children}</th>,
-      td: ({ children }) => <td className="px-4 py-2.5 text-[13px] text-foreground/90 leading-relaxed align-top">{children}</td>,
+      thead: ({ children }) => <thead className="bg-muted/50 border-b border-border/70">{children}</thead>,
+      tbody: ({ children }) => <tbody className="divide-y divide-border/50">{children}</tbody>,
+      tr: ({ children }) => <tr className="transition-colors hover:bg-muted/25">{children}</tr>,
+      th: ({ children }) => <th className="px-4 py-3 text-start text-[12px] font-semibold text-foreground/80 tracking-wide">{children}</th>,
+      td: ({ children }) => <td className="px-4 py-3 text-[13.5px] text-foreground/90 leading-[1.7] align-top [&>br]:block [&>br]:content-['']">{children}</td>,
+      br: () => <br />,
     }}
   >
     {formatRawUrls(content)}
