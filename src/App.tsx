@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense, startTransition, useTransition } from "react";
 import { lazyWithRetry as lazy } from "@/lib/lazyWithRetry";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -230,9 +230,60 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Thin top progress bar shown during route transitions so navigation feels
+// responsive even when the next chunk needs to download.
+const TopProgressBar = ({ active }: { active: boolean }) => {
+  const [visible, setVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (active) {
+      setVisible(true);
+      setProgress(8);
+      let p = 8;
+      const tick = () => {
+        p = p + (90 - p) * 0.15;
+        setProgress(p);
+        timerRef.current = window.setTimeout(tick, 180);
+      };
+      timerRef.current = window.setTimeout(tick, 120);
+    } else {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      setProgress(100);
+      const hide = window.setTimeout(() => { setVisible(false); setProgress(0); }, 220);
+      return () => window.clearTimeout(hide);
+    }
+    return () => { if (timerRef.current) window.clearTimeout(timerRef.current); };
+  }, [active]);
+
+  if (!visible) return null;
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 2, zIndex: 9999,
+        pointerEvents: "none", background: "transparent",
+      }}
+    >
+      <div
+        style={{
+          height: "100%",
+          width: `${progress}%`,
+          background: "hsl(var(--primary))",
+          boxShadow: "0 0 8px hsl(var(--primary) / 0.6)",
+          transition: "width 200ms ease-out, opacity 200ms ease-out",
+          opacity: progress >= 100 ? 0 : 1,
+        }}
+      />
+    </div>
+  );
+};
+
 const InternalLinkInterceptor = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isPending, startNav] = useTransition();
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -272,15 +323,20 @@ const InternalLinkInterceptor = () => {
       if (nextPath === currentPath) return;
 
       event.preventDefault();
-      navigate(nextPath);
+      startNav(() => navigate(nextPath));
     };
 
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, [location.hash, location.pathname, location.search, navigate]);
+  }, [location.hash, location.pathname, location.search, navigate, startNav]);
 
-  return null;
+  return <TopProgressBar active={isPending} />;
 };
+
+// Suppress unused-import warning for startTransition (kept for future use elsewhere).
+void startTransition;
+
+
 
 const DodoReturnRedirect = () => {
   const [params] = useSearchParams();
