@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import referralBanner from "@/assets/referral-banner.webp";
+import heroImg from "@/assets/cairo-tower-nile.jpg";
 
 const WHATSAPP_PHONE = "201098821812";
 const PROMOTER_MESSAGE =
@@ -20,10 +20,22 @@ const statusLabel = (s: string) =>
   ({ approved: "Approved", pending: "Pending", rejected: "Rejected", paid: "Paid", active: "Active" } as Record<string, string>)[s] ?? s;
 
 const statusColor = (s: string) => {
-  if (s === "approved" || s === "paid" || s === "active") return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+  if (s === "approved" || s === "paid" || s === "active") return "bg-sky-500/15 text-sky-300 border-sky-500/30";
   if (s === "rejected") return "bg-red-500/15 text-red-300 border-red-500/30";
   return "bg-white/5 text-white/70 border-white/15";
 };
+
+const BackButton = ({ onClick }: { onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    aria-label="Back"
+    className="fixed left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/[0.08] text-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition active:scale-95 hover:bg-white/[0.14]"
+  >
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" strokeWidth="2.4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 6 8.5 12l6 6" />
+    </svg>
+  </button>
+);
 
 const ReferralsPage = () => {
   const navigate = useNavigate();
@@ -84,16 +96,10 @@ const ReferralsPage = () => {
 
   return (
     <div data-theme="dark" dir="ltr" className="min-h-[100dvh] bg-background text-foreground">
-      {/* Floating back button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="fixed left-4 top-4 z-50 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white/80 shadow-lg backdrop-blur-xl transition hover:bg-white/[0.12] hover:text-white"
-      >
-        Back
-      </button>
+      <BackButton onClick={() => navigate(-1)} />
 
       <main className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8 pt-16">
-        {/* Cinematic hero */}
+        {/* Cinematic hero with Cairo Tower */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -101,19 +107,20 @@ const ReferralsPage = () => {
           className="relative mt-6 overflow-hidden rounded-3xl"
         >
           <img
-            src={referralBanner}
-            alt=""
+            src={heroImg}
+            alt="Cairo Tower over the Nile"
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f1f]/55 via-[#0b0f1f]/55 to-[#0b0f1f]/90" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#1e3a8a]/40 via-transparent to-[#b91c1c]/30 mix-blend-overlay" />
           <div className="relative z-10 px-6 py-16 text-center md:px-12 md:py-28">
-            <span className="inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-white/80 backdrop-blur">
+            <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-white/85 backdrop-blur">
               Megsy Affiliate
             </span>
             <h1 className="mt-6 font-display text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.95] text-white drop-shadow-2xl">
               Invite. Share.
               <br />
-              <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">Earn for life.</span>
+              <span className="bg-gradient-to-r from-[#3B82F6] via-[#A855F7] to-[#EF4444] bg-clip-text text-transparent">Earn for life.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-sm leading-relaxed text-white/85 md:text-lg">
               20% commission on every subscription your friends make — renews monthly as long as they stay with us.
@@ -128,7 +135,7 @@ const ReferralsPage = () => {
               />
               <button
                 onClick={copyLink}
-                className="rounded-xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-6 py-3 text-sm font-bold text-black transition hover:opacity-90"
+                className="rounded-xl bg-gradient-to-r from-[#3B82F6] to-[#EF4444] px-6 py-3 text-sm font-bold text-white transition hover:opacity-90"
               >
                 Copy Link
               </button>
@@ -155,20 +162,20 @@ const ReferralsPage = () => {
           ))}
         </section>
 
-        {/* Promoter CTA — cinematic */}
+        {/* Promoter CTA */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mt-10 overflow-hidden rounded-3xl border border-[#FFD700]/30 bg-gradient-to-br from-[#1a1305] via-black to-black p-8 md:p-12"
+          className="relative mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a1428] via-black to-[#1a0a0f] p-8 md:p-12"
         >
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#FFA500]/20 blur-3xl" />
-          <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#FFD700]/15 blur-3xl" />
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#3B82F6]/25 blur-3xl" />
+          <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#EF4444]/25 blur-3xl" />
           <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-[#FFD700]">Official Partnership</span>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#93C5FD]">Official Partnership</span>
               <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight text-white md:text-5xl">
-                Become an <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">Official Promoter</span>
+                Become an <span className="bg-gradient-to-r from-[#3B82F6] to-[#EF4444] bg-clip-text text-transparent">Official Promoter</span>
               </h2>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/70 md:text-base">
                 Commission up to 50% of earnings + free subscription + exclusive perks. Contact us now via WhatsApp and join the elite promoters.
@@ -176,7 +183,7 @@ const ReferralsPage = () => {
             </div>
             <button
               onClick={openPromoter}
-              className="self-start rounded-2xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-8 py-4 text-sm font-bold uppercase tracking-wider text-black shadow-2xl shadow-[#FFA500]/30 transition hover:scale-[1.02]"
+              className="self-start rounded-2xl bg-gradient-to-r from-[#3B82F6] to-[#EF4444] px-8 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-2xl shadow-[#3B82F6]/30 transition hover:scale-[1.02]"
             >
               Join via WhatsApp
             </button>
@@ -253,7 +260,7 @@ const ReferralsPage = () => {
                     <p className="text-sm font-medium text-white/90">{e.source_action}</p>
                     <p className="text-xs text-white/40">{fmtDate(e.created_at)}</p>
                   </div>
-                  <p className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-lg font-black text-transparent">
+                  <p className="bg-gradient-to-r from-[#3B82F6] to-[#EF4444] bg-clip-text text-lg font-black text-transparent">
                     +${Number(e.amount).toFixed(2)}
                   </p>
                 </div>

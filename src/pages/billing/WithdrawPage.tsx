@@ -21,7 +21,7 @@ const statusLabel = (s: string) =>
   ({ approved: "Approved", pending: "Pending", rejected: "Rejected", paid: "Paid" } as Record<string, string>)[s] ?? s;
 
 const statusColor = (s: string) => {
-  if (s === "approved" || s === "paid") return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+  if (s === "approved" || s === "paid") return "bg-sky-500/15 text-sky-300 border-sky-500/30";
   if (s === "rejected") return "bg-red-500/15 text-red-300 border-red-500/30";
   return "bg-white/5 text-white/70 border-white/15";
 };
@@ -138,17 +138,20 @@ const WithdrawPage = () => {
   const remainingThisMonth = Math.max(WITHDRAWALS_PER_MONTH - usedThisMonth, 0);
 
   const inputCls =
-    "w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-[#FFD700]/60 focus:bg-white/[0.06]";
+    "w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-[#3B82F6]/60 focus:bg-white/[0.06]";
   const labelCls = "block text-[11px] uppercase tracking-[0.2em] text-white/50 mb-2";
 
   return (
     <div data-theme="dark" dir="ltr" className="min-h-[100dvh] bg-background text-foreground">
-      {/* Floating back button */}
+      {/* iOS-style floating back button */}
       <button
         onClick={() => navigate("/settings/referrals")}
-        className="fixed left-4 top-4 z-50 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white/80 shadow-lg backdrop-blur-xl transition hover:bg-white/[0.12] hover:text-white"
+        aria-label="Back"
+        className="fixed left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/[0.08] text-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition active:scale-95 hover:bg-white/[0.14]"
       >
-        Back
+        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" strokeWidth="2.4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14.5 6 8.5 12l6 6" />
+        </svg>
       </button>
 
       <main className="mx-auto w-full max-w-4xl px-4 pb-24 md:px-8 pt-16">
@@ -156,14 +159,14 @@ const WithdrawPage = () => {
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative mt-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#1a1305] via-black to-black p-8 md:p-14"
+          className="relative mt-6 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a1428] via-black to-[#1a0a0f] p-8 md:p-14"
         >
-          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#FFA500]/20 blur-3xl" />
-          <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#FFD700]/10 blur-3xl" />
+          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#3B82F6]/25 blur-3xl" />
+          <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#EF4444]/20 blur-3xl" />
           <div className="relative">
             <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Available Balance</p>
             <h1 className="mt-4 font-display text-6xl font-black tracking-tight md:text-8xl">
-              <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#3B82F6] via-[#A855F7] to-[#EF4444] bg-clip-text text-transparent">
                 ${available.toFixed(2)}
               </span>
             </h1>
@@ -275,7 +278,7 @@ const WithdrawPage = () => {
             <button
               onClick={submitWithdrawal}
               disabled={submittingWd || approvedMethods.length === 0 || remainingThisMonth === 0}
-              className="w-full rounded-2xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-6 py-4 text-sm font-bold uppercase tracking-wider text-black shadow-2xl shadow-[#FFA500]/20 transition hover:scale-[1.01] disabled:scale-100 disabled:opacity-50"
+              className="w-full rounded-2xl bg-gradient-to-r from-[#3B82F6] to-[#EF4444] px-6 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-2xl shadow-[#3B82F6]/25 transition hover:scale-[1.01] disabled:scale-100 disabled:opacity-50"
             >
               {submittingWd ? "Sending…" :
                remainingThisMonth === 0 ? "Monthly limit exceeded" :
@@ -307,7 +310,7 @@ const WithdrawPage = () => {
                       onClick={() => setNewType(t)}
                       className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                         newType === t
-                          ? "border-[#FFD700]/50 bg-[#FFD700]/10 text-white"
+                          ? "border-[#3B82F6]/60 bg-[#3B82F6]/10 text-white"
                           : "border-white/10 bg-white/[0.02] text-white/60 hover:border-white/20"
                       }`}
                     >
@@ -348,7 +351,7 @@ const WithdrawPage = () => {
               </button>
               <button
                 onClick={submitMethod} disabled={submittingMethod}
-                className="flex-1 rounded-xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-4 py-3 text-sm font-bold text-black transition hover:opacity-90 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-gradient-to-r from-[#3B82F6] to-[#EF4444] px-4 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
               >
                 {submittingMethod ? "Sending…" : "Send for Review"}
               </button>
