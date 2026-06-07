@@ -6414,6 +6414,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_payment_methods: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: string
+          instructions: string
+          label: string
+          method_type: string
+          status: string
+          telegram_message_id: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          instructions: string
+          label: string
+          method_type?: string
+          status?: string
+          telegram_message_id?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          instructions?: string
+          label?: string
+          method_type?: string
+          status?: string
+          telegram_message_id?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           active_workspace_id: string | null
@@ -6563,36 +6602,56 @@ export type Database = {
       }
       withdrawal_requests: {
         Row: {
+          admin_note: string | null
           amount: number
           created_at: string
           id: string
           method: string
+          payment_address: string | null
           payment_details: string
+          payment_method_id: string | null
           processed_at: string | null
           status: string
+          telegram_message_id: number | null
           user_id: string
         }
         Insert: {
+          admin_note?: string | null
           amount: number
           created_at?: string
           id?: string
           method?: string
+          payment_address?: string | null
           payment_details?: string
+          payment_method_id?: string | null
           processed_at?: string | null
           status?: string
+          telegram_message_id?: number | null
           user_id: string
         }
         Update: {
+          admin_note?: string | null
           amount?: number
           created_at?: string
           id?: string
           method?: string
+          payment_address?: string | null
           payment_details?: string
+          payment_method_id?: string | null
           processed_at?: string | null
           status?: string
+          telegram_message_id?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "user_payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workspace_api_keys: {
         Row: {
