@@ -424,7 +424,7 @@ const ChatPage = () => {
   const [connectorsOpen, setConnectorsOpen] = useState(false);
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const [chatMenuView, setChatMenuView] = useState<"main" | "invite" | "rename" | "pin" | "delete">("main");
+  const [chatMenuView, setChatMenuView] = useState<"main" | "invite" | "share" | "rename" | "pin" | "delete">("main");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
@@ -3981,10 +3981,11 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
                   {chatMenuView === "main" && (
                     <>
                       {[
-                        { icon: Plus, label: "New chat", onClick: handleNewChat, featured: false, keepOpen: false, view: null as null | "invite" | "rename" | "pin" },
+                        { icon: Plus, label: "New chat", onClick: handleNewChat, featured: false, keepOpen: false, view: null as null | "invite" | "share" | "rename" | "pin" },
                         { icon: UserPlus, label: "Invite people", onClick: async () => { setChatMenuView("invite"); if (!conversationId) { toast.error("Start a conversation first"); return; } setInviteLink(null); setInviteEmail(""); const user = await getCachedUser(); if (!user) return; const { data, error } = await supabase.from("conversation_invites").insert({ conversation_id: conversationId, invited_by: user.id } as any).select("invite_token").single(); if (!error && data) { setInviteLink(`${window.location.origin}/invite/${(data as any).invite_token}`); } }, keepOpen: true, view: "invite" as const },
+                        { icon: Share2, label: "Share", onClick: () => { setChatMenuView("share"); if (conversationId && !generatedShareUrl) { void handleCreateShareLink("public"); } }, keepOpen: true, view: "share" as const },
                         { icon: Pencil, label: "Rename", onClick: () => { setRenameValue(conversationTitle); setChatMenuView("rename"); }, keepOpen: true, view: "rename" as const },
-                        { icon: Pin, label: isPinned ? "Unpin chat" : "Pin chat", onClick: () => { void performTogglePin(); }, keepOpen: false, view: null as null | "invite" | "rename" | "pin" },
+                        { icon: Pin, label: isPinned ? "Unpin chat" : "Pin chat", onClick: () => { void performTogglePin(); }, keepOpen: false, view: null as null | "invite" | "share" | "rename" | "pin" },
                       ].map(({ icon: Icon, label, onClick, featured, keepOpen }) => (
                         <DropdownMenuItem
                           key={label}
@@ -4075,6 +4076,57 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
                     </div>
                   )}
 
+                  {chatMenuView === "share" && (
+                    <div className="p-2">
+                      <button
+                        onClick={() => setChatMenuView("main")}
+                        className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground mb-2"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" /> Back
+                      </button>
+                      <div className="text-[13px] font-semibold text-foreground mb-1 px-1">Share chat</div>
+                      <p className="text-[11px] text-muted-foreground mb-3 px-1">Future messages aren't included</p>
+                      <div className="rounded-xl border border-border/40 overflow-hidden">
+                        <button
+                          onClick={() => { setShareMode("private"); setGeneratedShareUrl(null); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors ${shareMode === "private" ? "bg-accent/50" : "hover:bg-accent/30"}`}
+                        >
+                          <Lock className="w-3.5 h-3.5 text-foreground shrink-0" />
+                          <div className="text-left flex-1 min-w-0">
+                            <p className="text-[12.5px] font-semibold text-foreground">Keep private</p>
+                            <p className="text-[10.5px] text-muted-foreground">Only you have access</p>
+                          </div>
+                        </button>
+                        <div className="h-px bg-border/40" />
+                        <button
+                          onClick={() => { setShareMode("public"); if (!generatedShareUrl) void handleCreateShareLink("public"); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors ${shareMode === "public" ? "bg-accent/50" : "hover:bg-accent/30"}`}
+                        >
+                          <Globe className="w-3.5 h-3.5 text-foreground shrink-0" />
+                          <div className="text-left flex-1 min-w-0">
+                            <p className="text-[12.5px] font-semibold text-foreground">Create public link</p>
+                            <p className="text-[10.5px] text-muted-foreground">Anyone with the link can view</p>
+                          </div>
+                        </button>
+                      </div>
+                      {shareMode === "public" && (
+                        <div className="mt-3">
+                          {generatedShareUrl ? (
+                            <button
+                              onClick={handleCopyShareLink}
+                              className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-accent/40 hover:bg-accent/60 transition-colors"
+                            >
+                              <span className="text-[11.5px] text-foreground truncate" dir="ltr">{generatedShareUrl}</span>
+                              <Copy className="w-3.5 h-3.5 text-foreground shrink-0" />
+                            </button>
+                          ) : (
+                            <p className="text-center text-[11px] text-muted-foreground py-1">Generating link…</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {chatMenuView === "delete" && (
                     <div className="p-2">
                       <button
@@ -4104,7 +4156,7 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
           <div className="flex items-center gap-2">
             {/* Mobile: keep existing more menu */}
             {hasConversation && conversationId && (
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={(o) => { if (!o) setChatMenuView("main"); }}>
               <DropdownMenuTrigger asChild>
                 <button className="md:hidden w-9 h-9 flex items-center justify-center rounded-full text-foreground/85 hover:bg-accent/40 transition-colors" aria-label="More options">
                   <MoreVertical className="w-[20px] h-[20px]" />
@@ -4113,36 +4165,132 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
               <DropdownMenuContent
                 align="end"
                 sideOffset={8}
-                className="w-[15rem] rounded-2xl p-1.5"
+                className="w-[17rem] rounded-2xl p-1.5"
+                onCloseAutoFocus={(e) => e.preventDefault()}
               >
-                {[
-                  { icon: Plus, label: "New chat", onClick: handleNewChat, featured: false },
-                  
-                  { icon: UserPlus, label: "Invite people", onClick: handleInvite },
-                  { icon: Pencil, label: "Rename", onClick: () => { setRenameValue(conversationTitle); setIsRenaming(true); } },
-                  { icon: Pin, label: isPinned ? "Unpin chat" : "Pin chat", onClick: () => { void performTogglePin(); } },
-                ].map(({ icon: Icon, label, onClick, featured }) => (
-                  <DropdownMenuItem
-                    key={label}
-                    onClick={onClick}
-                    className="rounded-xl px-2.5 py-2.5 text-[14px] gap-3 cursor-pointer text-foreground/90 focus:bg-accent/40 data-[highlighted]:bg-accent/40"
-                  >
-                    <span className="w-8 h-8 flex items-center justify-center shrink-0">
-                      <Icon className="w-[16px] h-[16px] text-foreground" strokeWidth={1.9} />
-                    </span>
-                    <span className="flex-1 truncate">{label}</span>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator className="my-1.5 bg-border/40" />
-                <DropdownMenuItem
-                  onClick={() => { void confirmDelete(); }}
-                  className="rounded-xl px-2.5 py-2.5 text-[14px] gap-3 cursor-pointer text-destructive focus:text-destructive data-[highlighted]:bg-destructive/10"
-                >
-                  <span className="w-8 h-8 flex items-center justify-center shrink-0">
-                    <Trash2 className="w-[16px] h-[16px]" strokeWidth={1.9} />
-                  </span>
-                  <span className="flex-1 truncate">Delete chat</span>
-                </DropdownMenuItem>
+                {chatMenuView === "main" && (
+                  <>
+                    {[
+                      { icon: Plus, label: "New chat", onClick: handleNewChat, keepOpen: false },
+                      { icon: UserPlus, label: "Invite people", onClick: async () => { setChatMenuView("invite"); if (!conversationId) { toast.error("Start a conversation first"); return; } setInviteLink(null); setInviteEmail(""); const user = await getCachedUser(); if (!user) return; const { data, error } = await supabase.from("conversation_invites").insert({ conversation_id: conversationId, invited_by: user.id } as any).select("invite_token").single(); if (!error && data) { setInviteLink(`${window.location.origin}/invite/${(data as any).invite_token}`); } }, keepOpen: true },
+                      { icon: Share2, label: "Share", onClick: () => { setChatMenuView("share"); if (conversationId && !generatedShareUrl) { void handleCreateShareLink("public"); } }, keepOpen: true },
+                      { icon: Pencil, label: "Rename", onClick: () => { setRenameValue(conversationTitle); setChatMenuView("rename"); }, keepOpen: true },
+                      { icon: Pin, label: isPinned ? "Unpin chat" : "Pin chat", onClick: () => { void performTogglePin(); }, keepOpen: false },
+                    ].map(({ icon: Icon, label, onClick, keepOpen }) => (
+                      <DropdownMenuItem
+                        key={label}
+                        onSelect={(e) => { if (keepOpen) { e.preventDefault(); } onClick(); }}
+                        className="rounded-xl px-2.5 py-2.5 text-[14px] gap-3 cursor-pointer text-foreground/90 focus:bg-accent/40 data-[highlighted]:bg-accent/40"
+                      >
+                        <span className="w-8 h-8 flex items-center justify-center shrink-0">
+                          <Icon className="w-[16px] h-[16px] text-foreground" strokeWidth={1.9} />
+                        </span>
+                        <span className="flex-1 truncate">{label}</span>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator className="my-1.5 bg-border/40" />
+                    <DropdownMenuItem
+                      onSelect={(e) => { e.preventDefault(); setChatMenuView("delete"); }}
+                      className="rounded-xl px-2.5 py-2.5 text-[14px] gap-3 cursor-pointer text-destructive focus:text-destructive data-[highlighted]:bg-destructive/10"
+                    >
+                      <span className="w-8 h-8 flex items-center justify-center shrink-0">
+                        <Trash2 className="w-[16px] h-[16px]" strokeWidth={1.9} />
+                      </span>
+                      <span className="flex-1 truncate">Delete chat</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {chatMenuView === "rename" && (
+                  <div className="p-2">
+                    <button onClick={() => setChatMenuView("main")} className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground mb-2">
+                      <ChevronLeft className="w-3.5 h-3.5" /> Back
+                    </button>
+                    <div className="text-[13px] font-semibold text-foreground mb-2 px-1">Rename chat</div>
+                    <Input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { void handleRename(); setChatMenuView("main"); } }} autoFocus className="h-9 rounded-lg text-sm" />
+                    <div className="flex justify-end gap-2 mt-2">
+                      <button onClick={() => setChatMenuView("main")} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                      <button onClick={() => { void handleRename(); setChatMenuView("main"); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90">Save</button>
+                    </div>
+                  </div>
+                )}
+
+                {chatMenuView === "invite" && (
+                  <div className="p-2">
+                    <button onClick={() => setChatMenuView("main")} className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground mb-2">
+                      <ChevronLeft className="w-3.5 h-3.5" /> Back
+                    </button>
+                    <div className="text-[13px] font-semibold text-foreground mb-1 px-1">Invite people</div>
+                    <p className="text-[11px] text-muted-foreground mb-3 px-1">Add someone to this conversation</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="friend@example.com" className="flex-1 h-9 rounded-lg text-sm" onKeyDown={(e) => e.key === "Enter" && handleSendInviteEmail()} />
+                      <button onClick={handleSendInviteEmail} disabled={inviteLoading || !inviteEmail.trim()} className="px-3 h-9 rounded-lg text-xs font-semibold bg-foreground text-background hover:opacity-90 disabled:opacity-40">
+                        {inviteLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Invite"}
+                      </button>
+                    </div>
+                    {inviteLink ? (
+                      <button onClick={handleCopyInviteLink} className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-accent/40 hover:bg-accent/60 transition-colors">
+                        <span className="text-[11.5px] text-foreground truncate" dir="ltr">{inviteLink}</span>
+                        <Copy className="w-3.5 h-3.5 text-foreground shrink-0" />
+                      </button>
+                    ) : (
+                      <p className="text-center text-[11px] text-muted-foreground py-2">Generating link…</p>
+                    )}
+                  </div>
+                )}
+
+                {chatMenuView === "share" && (
+                  <div className="p-2">
+                    <button onClick={() => setChatMenuView("main")} className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground mb-2">
+                      <ChevronLeft className="w-3.5 h-3.5" /> Back
+                    </button>
+                    <div className="text-[13px] font-semibold text-foreground mb-1 px-1">Share chat</div>
+                    <p className="text-[11px] text-muted-foreground mb-3 px-1">Future messages aren't included</p>
+                    <div className="rounded-xl border border-border/40 overflow-hidden">
+                      <button onClick={() => { setShareMode("private"); setGeneratedShareUrl(null); }} className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors ${shareMode === "private" ? "bg-accent/50" : "hover:bg-accent/30"}`}>
+                        <Lock className="w-3.5 h-3.5 text-foreground shrink-0" />
+                        <div className="text-left flex-1 min-w-0">
+                          <p className="text-[12.5px] font-semibold text-foreground">Keep private</p>
+                          <p className="text-[10.5px] text-muted-foreground">Only you have access</p>
+                        </div>
+                      </button>
+                      <div className="h-px bg-border/40" />
+                      <button onClick={() => { setShareMode("public"); if (!generatedShareUrl) void handleCreateShareLink("public"); }} className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors ${shareMode === "public" ? "bg-accent/50" : "hover:bg-accent/30"}`}>
+                        <Globe className="w-3.5 h-3.5 text-foreground shrink-0" />
+                        <div className="text-left flex-1 min-w-0">
+                          <p className="text-[12.5px] font-semibold text-foreground">Create public link</p>
+                          <p className="text-[10.5px] text-muted-foreground">Anyone with the link can view</p>
+                        </div>
+                      </button>
+                    </div>
+                    {shareMode === "public" && (
+                      <div className="mt-3">
+                        {generatedShareUrl ? (
+                          <button onClick={handleCopyShareLink} className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-accent/40 hover:bg-accent/60 transition-colors">
+                            <span className="text-[11.5px] text-foreground truncate" dir="ltr">{generatedShareUrl}</span>
+                            <Copy className="w-3.5 h-3.5 text-foreground shrink-0" />
+                          </button>
+                        ) : (
+                          <p className="text-center text-[11px] text-muted-foreground py-1">Generating link…</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {chatMenuView === "delete" && (
+                  <div className="p-2">
+                    <button onClick={() => setChatMenuView("main")} className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground mb-2">
+                      <ChevronLeft className="w-3.5 h-3.5" /> Back
+                    </button>
+                    <div className="text-[13px] font-semibold text-foreground mb-1 px-1">Delete chat?</div>
+                    <p className="text-[11px] text-muted-foreground mb-3 px-1">This conversation will be permanently removed. This action cannot be undone.</p>
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setChatMenuView("main")} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                      <button onClick={() => { void confirmDelete(); }} disabled={isDeleting} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground hover:opacity-90 disabled:opacity-50">Delete</button>
+                    </div>
+                  </div>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             )}

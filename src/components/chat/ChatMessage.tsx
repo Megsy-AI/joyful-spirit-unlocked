@@ -302,19 +302,23 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
           );
         }
 
-        return <code className="px-1.5 py-0.5 rounded-md bg-secondary/60 border border-border/40 text-[0.875em] font-mono text-foreground" {...props}>{children}</code>;
+        return <code className="px-[0.35em] py-[0.15em] rounded-md bg-muted text-[0.875em] font-mono text-foreground" {...props}>{children}</code>;
       },
       pre: ({ children }) => <>{children}</>,
+      blockquote: ({ children }) => (
+        <blockquote className="my-4 border-s-2 border-border ps-4 text-foreground/80 italic">{children}</blockquote>
+      ),
+      hr: () => <hr className="my-6 border-0 border-t border-border" />,
       table: ({ children }) => (
-        <div className="my-4 max-w-full overflow-x-auto rounded-2xl border border-white/10 bg-zinc-900/40 backdrop-blur-xl shadow-2xl shadow-black/40">
-          <table className="w-full border-collapse text-start">{children}</table>
+        <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="w-full border-collapse text-start text-[13px]">{children}</table>
         </div>
       ),
-      thead: ({ children }) => <thead>{children}</thead>,
-      tbody: ({ children }) => <tbody className="divide-y divide-white/5">{children}</tbody>,
-      tr: ({ children }) => <tr className="group border-b border-white/10 last:border-0 bg-transparent first:bg-white/5 transition-colors duration-200 hover:bg-white/5">{children}</tr>,
-      th: ({ children }) => <th className="px-6 py-4 text-start text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">{children}</th>,
-      td: ({ children }) => <td className="px-6 py-4 text-[13px] text-zinc-400 leading-relaxed align-top first:text-zinc-200 first:font-medium group-hover:text-zinc-300 transition-colors">{children}</td>,
+      thead: ({ children }) => <thead className="bg-muted/40">{children}</thead>,
+      tbody: ({ children }) => <tbody>{children}</tbody>,
+      tr: ({ children }) => <tr className="border-b border-border last:border-0 transition-colors hover:bg-muted/30">{children}</tr>,
+      th: ({ children }) => <th className="px-4 py-2.5 text-start text-[11px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border">{children}</th>,
+      td: ({ children }) => <td className="px-4 py-2.5 text-[13px] text-foreground/90 leading-relaxed align-top">{children}</td>,
     }}
   >
     {formatRawUrls(content)}
