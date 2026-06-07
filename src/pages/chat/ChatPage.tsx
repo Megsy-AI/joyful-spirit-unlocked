@@ -3944,10 +3944,44 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
           onNewChat={handleNewChat}
           onShare={handleShare}
           onInvite={handleInvite}
-          onRename={() => { setRenameValue(conversationTitle); setIsRenaming(true); }}
+          onRename={() => { setRenameValue(conversationTitle); }}
           onTogglePin={performTogglePin}
           onDelete={confirmDelete}
           isDeleting={isDeleting}
+          inlineRename={{
+            value: renameValue,
+            onChange: setRenameValue,
+            onSave: () => { void handleRename(); },
+          }}
+          inlineInvite={{
+            email: inviteEmail,
+            onEmailChange: setInviteEmail,
+            onSend: () => { void handleSendInviteEmail(); },
+            loading: inviteLoading,
+            link: inviteLink,
+            onCopyLink: handleCopyInviteLink,
+            onOpen: async () => {
+              if (!conversationId) { toast.error("Start a conversation first"); return; }
+              setInviteLink(null); setInviteEmail("");
+              const user = await getCachedUser();
+              if (!user) return;
+              const { data, error } = await supabase.from("conversation_invites").insert({ conversation_id: conversationId, invited_by: user.id } as any).select("invite_token").single();
+              if (!error && data) setInviteLink(`${window.location.origin}/invite/${(data as any).invite_token}`);
+            },
+          }}
+          inlineShare={{
+            mode: shareMode,
+            onModeChange: (m) => {
+              setShareMode(m);
+              if (m === "public" && !generatedShareUrl) void handleCreateShareLink("public");
+              if (m === "private") setGeneratedShareUrl(null);
+            },
+            url: generatedShareUrl,
+            onCopyLink: handleCopyShareLink,
+            onOpen: () => {
+              if (conversationId && !generatedShareUrl) void handleCreateShareLink("public");
+            },
+          }}
           rightSlot={!hasConversation && !["pro","business","elite"].includes((userPlan||"").toLowerCase()) ? <UnlockProButton onClick={() => navigate("/pricing")} aria-label="Get Plus" text="Get Plus" /> : null}
         />
 
