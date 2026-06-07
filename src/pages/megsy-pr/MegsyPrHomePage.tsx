@@ -79,6 +79,7 @@ export default function MegsyPrHomePage() {
     return localStorage.getItem("megsy_pr_model") || "megsy";
   });
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
+  const [platformPickerOpen, setPlatformPickerOpen] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("megsy_pr_model", selectedModel);
   }, [selectedModel]);
