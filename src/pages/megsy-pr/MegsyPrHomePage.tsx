@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUp, Plus, Loader2, Paperclip, Palette, Database, ChevronRight, ChevronDown, X,
-  Image as ImageIcon, FileText, Check, Code2, MessageSquare, Film
+  Image as ImageIcon, FileText, Check, Code2, MessageSquare, Film, Smartphone, Monitor
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -67,6 +67,11 @@ export default function MegsyPrHomePage() {
   const [greeting] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
 
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [platform, setPlatform] = useState<"web" | "ios" | "android">(() => {
+    if (typeof window !== "undefined") return (localStorage.getItem("megsy_pr_platform") as any) || "web";
+    return "web";
+  });
+  useEffect(() => { if (typeof window !== "undefined") localStorage.setItem("megsy_pr_platform", platform); }, [platform]);
   const [files, setFiles] = useState<AttachedFile[]>([]);
   const [linkedProject, setLinkedProject] = useState<{ ref: string; name: string } | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>(() => {
@@ -309,6 +314,8 @@ export default function MegsyPrHomePage() {
 
       let fullPrompt = prompt;
       const hidden: string[] = [];
+      const platformLabel = platform === "ios" ? "iOS App (native-feel SwiftUI-style React Native preview)" : platform === "android" ? "Android App (Material You-style React Native preview)" : "Full-stack web app (React + Vite + Tailwind + Supabase)";
+      hidden.push(`[Target platform: ${platformLabel}]`);
       if (selectedTheme) {
         const t = DESIGN_THEMES.find((x) => x.id === selectedTheme);
         if (t) hidden.push(`[Design preference: ${t.name}]`);
@@ -564,6 +571,33 @@ export default function MegsyPrHomePage() {
             )}
           </div>
 
+
+          {/* Platform selector — clean segmented control */}
+          <div className="mt-3 -mx-1 px-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            {([
+              { id: "web", label: "Full-stack Web", Icon: Monitor },
+              { id: "ios", label: "iOS App", Icon: Smartphone },
+              { id: "android", label: "Android App", Icon: Smartphone },
+            ] as const).map(({ id, label, Icon }) => {
+              const active = platform === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPlatform(id)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium transition-all border",
+                    active
+                      ? "bg-foreground text-background border-foreground shadow-sm"
+                      : "bg-foreground/[0.03] text-foreground/65 border-foreground/10 hover:text-foreground hover:bg-foreground/[0.06]"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" strokeWidth={1.9} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* Bottom controls */}
           <div className="flex items-center justify-between mt-2 gap-2">

@@ -312,15 +312,38 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
       ),
       hr: () => <hr className="my-6 border-0 border-t border-border" />,
       table: ({ children }) => (
-        <div className="my-5 max-w-full overflow-x-auto rounded-xl border border-border/70 bg-card/40 shadow-sm">
+        <div
+          className="my-5 max-w-full overflow-x-auto rounded-2xl border border-border/60"
+          style={{
+            background: "linear-gradient(180deg, hsl(var(--card) / 0.6), hsl(var(--card) / 0.3))",
+            boxShadow: "0 1px 0 hsl(var(--foreground) / 0.04) inset, 0 8px 24px -16px hsl(var(--foreground) / 0.18)",
+          }}
+        >
           <table className="w-full border-collapse text-start text-[13.5px]">{children}</table>
         </div>
       ),
-      thead: ({ children }) => <thead className="bg-muted/50 border-b border-border/70">{children}</thead>,
-      tbody: ({ children }) => <tbody className="divide-y divide-border/50">{children}</tbody>,
-      tr: ({ children }) => <tr className="transition-colors hover:bg-muted/25">{children}</tr>,
-      th: ({ children }) => <th className="px-4 py-3 text-start text-[12px] font-semibold text-foreground/80 tracking-wide">{children}</th>,
-      td: ({ children }) => <td className="px-4 py-3 text-[13.5px] text-foreground/90 leading-[1.7] align-top [&>br]:block [&>br]:content-['']">{children}</td>,
+      thead: ({ children }) => (
+        <thead
+          className="border-b border-border/60"
+          style={{ background: "linear-gradient(180deg, hsl(var(--muted) / 0.7), hsl(var(--muted) / 0.35))" }}
+        >
+          {children}
+        </thead>
+      ),
+      tbody: ({ children }) => <tbody>{children}</tbody>,
+      tr: ({ children }) => (
+        <tr className="border-b border-border/40 last:border-0 transition-colors hover:bg-foreground/[0.03] [tbody_&:nth-child(even)]:bg-foreground/[0.015]">{children}</tr>
+      ),
+      th: ({ children }) => (
+        <th className="px-4 py-3 text-start text-[11.5px] font-semibold text-foreground/70 uppercase tracking-[0.06em] whitespace-nowrap">
+          {children}
+        </th>
+      ),
+      td: ({ children }) => (
+        <td className="px-4 py-3.5 text-[13.5px] text-foreground/90 leading-[1.7] align-top [&>br]:block">
+          {children}
+        </td>
+      ),
       br: () => <br />,
     }}
   >
