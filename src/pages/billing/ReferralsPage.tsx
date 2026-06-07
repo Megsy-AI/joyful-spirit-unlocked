@@ -1,11 +1,11 @@
-import { ArrowLeft, Copy, Check, X, QrCode } from "lucide-react";
+import { ArrowLeft, Copy, Check, X, QrCode, Sparkles, TrendingUp, Users, DollarSign, Wallet, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import { DesktopSettingsLayout } from "@/components/settings/DesktopSettingsLayout";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import referralHero from "@/assets/referral-hero.webp";
+import LiveAurora from "@/components/referral/LiveAurora";
 
 interface Referral { id: string; referred_id: string; status: string; created_at: string; }
 interface Earning { id: string; amount: number; source_action: string; created_at: string; }
@@ -43,10 +43,52 @@ const MILESTONE_LABELS: Record<string, string> = {
   week_streak: "7-Day Streak",
 };
 
-const NOIR = "#0d0d0d";
-const SURFACE = "#1a1a1a";
-const GOLD = "#c9a84c";
-const GOLD_LIGHT = "#f0d78c";
+/* ----- iOS 26 Liquid Glass primitives ----- */
+
+const Glass = ({
+  children,
+  className = "",
+  as: As = "div",
+  ...rest
+}: {
+  children: React.ReactNode;
+  className?: string;
+  as?: keyof React.JSX.IntrinsicElements;
+  [k: string]: unknown;
+}) => (
+  <As
+    className={
+      "relative rounded-[26px] border border-white/12 bg-white/[0.06] " +
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_30px_60px_-30px_rgba(0,0,0,0.6)] " +
+      "backdrop-blur-2xl backdrop-saturate-150 " +
+      className
+    }
+    {...rest}
+  >
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 rounded-[26px] opacity-70"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.04) 100%)",
+      }}
+    />
+    <div className="relative">{children}</div>
+  </As>
+);
+
+const GlassPill = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <span
+    className={
+      "inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85 backdrop-blur-xl " +
+      className
+    }
+  >
+    {children}
+  </span>
+);
+
+/* ----------------------------------------- */
 
 const ReferralsPage = () => {
   const navigate = useNavigate();
@@ -66,28 +108,16 @@ const ReferralsPage = () => {
   const referralLink = referralCode ? `${window.location.origin}/ref/${referralCode}` : "";
   const landingLink = referralCode ? `${window.location.origin}/r/${referralCode}` : "";
 
-  const shareTemplates = referralCode ? [
-    {
-      id: "casual",
-      label: "Casual",
-      text: `Hey! I've been using Megsy AI — it's actually amazing. Chat, image, video, code, all in one place. Try it free: ${landingLink}`,
-    },
-    {
-      id: "value",
-      label: "Value",
-      text: `Stop paying for 5 different AI tools. Megsy AI = ChatGPT + Midjourney + Runway + Cursor in ONE app. Start free → ${landingLink}`,
-    },
-    {
-      id: "creator",
-      label: "Creator",
-      text: `My new favorite AI tool 🤖✨\n\nText, images, videos, code — all from one prompt.\nGrab it free here: ${landingLink}`,
-    },
-  ] : [];
+  const shareTemplates = referralCode
+    ? [
+        { id: "casual", label: "Casual", text: `Hey! I've been using Megsy AI — it's actually amazing. Chat, image, video, code, all in one place. Try it free: ${landingLink}` },
+        { id: "value", label: "Value", text: `Stop paying for 5 different AI tools. Megsy AI = ChatGPT + Midjourney + Runway + Cursor in ONE app. Start free → ${landingLink}` },
+        { id: "creator", label: "Creator", text: `My new favorite AI tool 🤖✨\n\nText, images, videos, code — all from one prompt.\nGrab it free here: ${landingLink}` },
+      ]
+    : [];
 
   const callApi = useCallback(async (op: string, body: Record<string, unknown> = {}) => {
-    const { data, error } = await supabase.functions.invoke("referral-track", {
-      body: { op, ...body },
-    });
+    const { data, error } = await supabase.functions.invoke("referral-track", { body: { op, ...body } });
     if (error) throw error;
     return data;
   }, []);
@@ -133,24 +163,21 @@ const ReferralsPage = () => {
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    toast.success("Tracking link copied!");
-    setTimeout(() => setCopied(false), 2000);
+    toast.success("Tracking link copied");
+    setTimeout(() => setCopied(false), 1800);
   };
-
   const handleCopyLanding = () => {
     navigator.clipboard.writeText(landingLink);
     setCopiedLanding(true);
-    toast.success("Personal landing page copied!");
-    setTimeout(() => setCopiedLanding(false), 2000);
+    toast.success("Landing link copied");
+    setTimeout(() => setCopiedLanding(false), 1800);
   };
-
   const handleCopyTemplate = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedMessage(id);
-    toast.success("Message copied — ready to paste");
-    setTimeout(() => setCopiedMessage(null), 2000);
+    toast.success("Message copied");
+    setTimeout(() => setCopiedMessage(null), 1800);
   };
-
   const handleShare = (platform: string) => {
     if (!shareData?.share[platform]) return;
     window.open(shareData.share[platform], "_blank", "noopener,noreferrer");
@@ -164,624 +191,385 @@ const ReferralsPage = () => {
   const commissionPct = tier ? Math.round(tier.commission_rate * 100) : 15;
   const tierName = tier?.tier_name ?? "Bronze";
 
-  const mobileContent = (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-3 pb-28 font-['Work_Sans'] text-zinc-400"
-      style={{ fontFamily: "'Work Sans', system-ui, sans-serif" }}
-    >
-      <section className="relative overflow-hidden rounded-[1.75rem] border border-white/5" style={{ background: SURFACE }}>
-        <div className="relative h-40 overflow-hidden">
-          <img src={referralHero} alt="Megsy Referral Program" className="h-full w-full object-cover opacity-55 grayscale" />
-          <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, rgba(13,13,13,0.05), ${SURFACE})` }} />
-          <div className="absolute left-5 top-5 inline-flex items-center rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-widest" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)", color: GOLD_LIGHT }}>
-            {tierName} Tier
-          </div>
+  /* ---------- shared building blocks ---------- */
+
+  const heroBlock = (
+    <Glass className="overflow-hidden p-6 md:p-10">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-4">
+          <GlassPill>
+            <Sparkles className="h-3 w-3" /> {tierName} · {commissionPct}% Lifetime
+          </GlassPill>
+          <h1 className="text-[34px] md:text-[52px] font-semibold leading-[1.05] tracking-[-0.02em] text-white">
+            Invite friends.<br />
+            <span className="bg-gradient-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent">
+              Earn forever.
+            </span>
+          </h1>
+          <p className="max-w-md text-[14px] leading-relaxed text-white/65">
+            Every paying referral pays you {commissionPct}% — every month, for as long as they stay.
+          </p>
         </div>
 
-        <div className="space-y-5 px-5 pb-5 pt-1">
-          <div className="space-y-2">
-            <h1 className="text-[2rem] leading-none text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>
-              Referral Program
-            </h1>
-            <p className="max-w-[19rem] text-[13px] leading-5 text-zinc-500">
-              Earn {commissionPct}% recurring commission every time your referrals pay.
+        <div className="flex flex-col items-stretch gap-3 md:items-end">
+          <div className="rounded-3xl border border-white/15 bg-white/[0.08] p-5 backdrop-blur-xl">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-white/55">Available balance</p>
+            <p className="mt-1 text-[44px] font-semibold leading-none tracking-tight text-white">
+              ${availableBalance.toFixed(2)}
             </p>
-          </div>
-
-          <div className="flex items-end justify-between gap-4 rounded-2xl p-4" style={{ background: NOIR, border: "1px solid rgba(201,168,76,0.12)" }}>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase tracking-widest text-zinc-500">Available</p>
-              <p className="mt-1 text-3xl font-semibold text-white">${availableBalance.toFixed(2)}</p>
-              {stats && stats.pendingEarnings > 0 && <p className="text-[10px] text-zinc-600">${stats.pendingEarnings.toFixed(2)} pending</p>}
-            </div>
-            <button
-              onClick={() => navigate("/settings/withdraw")}
-              className="shrink-0 rounded-full px-5 py-3 text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: `linear-gradient(to top right, ${GOLD}, ${GOLD_LIGHT})`, color: NOIR }}
-            >
-              Withdraw
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-2 gap-3">
-        {[
-          { label: "Clicks", value: (stats?.totalClicks ?? 0).toString(), highlight: false },
-          { label: "Signups", value: (stats?.signups ?? referrals.length).toString(), highlight: false },
-          { label: "Conv. Rate", value: `${stats?.convRate ?? 0}%`, highlight: false },
-          { label: "Total Earned", value: `$${totalEarned.toFixed(2)}`, highlight: true },
-        ].map((s) => (
-          <div key={s.label} className="min-w-0 rounded-2xl p-4" style={{ background: SURFACE, border: `1px solid ${s.highlight ? "rgba(201,168,76,0.32)" : "rgba(255,255,255,0.05)"}` }}>
-            <p className="mb-2 text-[9px] uppercase tracking-widest" style={{ color: s.highlight ? GOLD : "#71717a" }}>{s.label}</p>
-            <p className="truncate text-[1.7rem] leading-none" style={{ fontFamily: "'Instrument Serif', serif", color: s.highlight ? GOLD_LIGHT : "#fff" }}>{s.value}</p>
-          </div>
-        ))}
-      </section>
-
-      {stats && stats.milestones.length > 0 && (
-        <section className="rounded-2xl p-4" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-          <p className="mb-3 text-[9px] uppercase tracking-widest text-zinc-500">Milestones</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {stats.milestones.map((m) => (
-              <span key={m.milestone_key} className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold" style={{ background: "rgba(201,168,76,0.10)", border: "1px solid rgba(201,168,76,0.20)", color: GOLD_LIGHT }}>
-                {MILESTONE_LABELS[m.milestone_key] || m.milestone_key}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="space-y-4 rounded-[1.5rem] p-4" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold text-white">Referral Assets</h2>
-          <span className="rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest" style={{ background: "rgba(201,168,76,0.10)", color: GOLD_LIGHT }}>
-            Ready
-          </span>
-        </div>
-
-        {[
-          { label: "Tracking Link", value: referralLink || "Loading…", copied: copied, action: handleCopy },
-          { label: "Landing Page", value: landingLink || "Loading…", copied: copiedLanding, action: handleCopyLanding },
-        ].map((item) => (
-          <div key={item.label} className="space-y-2 rounded-2xl p-3" style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[9px] uppercase tracking-widest text-zinc-500">{item.label}</p>
-              <button onClick={item.action} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/5" style={{ color: item.copied ? GOLD_LIGHT : "#a1a1aa" }} aria-label={`Copy ${item.label}`}>
-                {item.copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </button>
-            </div>
-            <p className="min-w-0 truncate pr-1 text-[12px] text-zinc-500">{item.value}</p>
-          </div>
-        ))}
-
-        {shareData && (
-          <div className="space-y-3 pt-1">
-            <p className="text-[9px] uppercase tracking-widest text-zinc-500">Quick Share</p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: "whatsapp", label: "WhatsApp" },
-                { key: "twitter", label: "X" },
-                { key: "telegram", label: "Telegram" },
-                { key: "email", label: "Email" },
-                { key: "qr", label: "QR" },
-              ].map((b) => (
-                <button key={b.key} onClick={() => (b.key === "qr" ? setShowQR(true) : handleShare(b.key))} className="min-h-11 rounded-xl px-2 text-[11px] font-semibold transition-colors hover:bg-white/5" style={{ border: "1px solid rgba(255,255,255,0.06)", color: b.key === "qr" ? GOLD_LIGHT : "#d4d4d8" }}>
-                  {b.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-4 rounded-[1.5rem] p-4" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-        <h2 className="text-[15px] font-semibold text-white">Message Templates</h2>
-        <div className="space-y-3">
-          {shareTemplates.map((t) => (
-            <div key={t.id} className="rounded-2xl p-3" style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>{t.label}</span>
-                <button onClick={() => handleCopyTemplate(t.id, t.text)} className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-[#f0d78c] text-white">
-                  {copiedMessage === t.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                  {copiedMessage === t.id ? "Copied" : "Copy"}
-                </button>
-              </div>
-              <p className="line-clamp-3 whitespace-pre-line text-[12px] leading-5 text-zinc-500">{t.text}</p>
-            </div>
-          ))}
-          {shareTemplates.length === 0 && <p className="py-4 text-center text-xs text-zinc-600">Loading templates…</p>}
-        </div>
-      </section>
-
-      {stats && (stats.streak > 0 || stats.bestDay.clicks > 0) && (
-        <section className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl p-4" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-            <p className="mb-2 text-[9px] uppercase tracking-widest text-zinc-500">Streak</p>
-            <p className="text-3xl text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>{stats.streak}d</p>
-          </div>
-          <div className="rounded-2xl p-4" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-            <p className="mb-2 text-[9px] uppercase tracking-widest text-zinc-500">Best Day</p>
-            <p className="text-3xl text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>{stats.bestDay.clicks}</p>
-          </div>
-        </section>
-      )}
-
-      <section className="space-y-3">
-        <div className="flex gap-2 overflow-x-auto rounded-full p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-          {(["insights", "referrals", "earnings", "withdrawals"] as const).map((t) => (
-            <button key={t} onClick={() => setActiveTab(t)} className={`shrink-0 rounded-full px-4 py-2 text-[11px] font-semibold capitalize transition-all ${activeTab === t ? "text-[#0d0d0d]" : "text-zinc-400 hover:text-white"}`} style={activeTab === t ? { background: `linear-gradient(to top right, ${GOLD}, ${GOLD_LIGHT})` } : undefined}>
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }} className="rounded-[1.5rem] p-4" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-            {activeTab === "insights" && (!stats ? <p className="py-8 text-center text-sm text-zinc-500">Loading insights…</p> : <div className="space-y-5"><div className="space-y-2"><p className="text-[10px] uppercase tracking-widest" style={{ color: GOLD }}>Top Sources</p>{stats.topSources.length === 0 ? <p className="py-2 text-sm text-zinc-500">No clicks yet.</p> : stats.topSources.map((s) => <div key={s.source} className="flex items-center justify-between gap-3 border-b border-white/5 py-2 last:border-0"><p className="min-w-0 truncate text-sm font-medium capitalize text-white">{s.source}</p><p className="shrink-0 text-[11px] text-zinc-500">{s.clicks} clicks · {s.conversions} conv.</p></div>)}</div>{stats.topCountries.length > 0 && <div className="space-y-2"><p className="text-[10px] uppercase tracking-widest" style={{ color: GOLD }}>Top Countries</p>{stats.topCountries.map((c) => <div key={c.country} className="flex items-center justify-between gap-3 border-b border-white/5 py-2 last:border-0"><p className="min-w-0 truncate text-sm font-medium text-white">{c.country}</p><p className="shrink-0 text-[11px] text-zinc-500">{c.count}</p></div>)}</div>}<div className="rounded-xl p-4 text-center" style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.05)" }}><p className="text-2xl text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>{stats.peakHour}:00 UTC</p><p className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500">Peak Click Hour</p></div></div>)}
-            {activeTab === "referrals" && (referrals.length === 0 ? <p className="py-8 text-center text-sm text-zinc-500">No referrals yet. Share your link to get started.</p> : referrals.map((r) => <div key={r.id} className="flex items-center justify-between gap-3 border-b border-white/5 py-3 last:border-0"><div className="min-w-0"><p className="truncate text-sm font-medium text-white">User {r.referred_id.substring(0, 8)}…</p><p className="text-[11px] text-zinc-500">{formatDate(r.created_at)}</p></div><span className="shrink-0 text-[11px] font-medium" style={{ color: r.status === "active" ? "#86efac" : GOLD_LIGHT }}>{r.status}</span></div>))}
-            {activeTab === "earnings" && (earnings.length === 0 ? <p className="py-8 text-center text-sm text-zinc-500">No earnings yet.</p> : earnings.map((e) => <div key={e.id} className="flex items-center justify-between gap-3 border-b border-white/5 py-3 last:border-0"><div className="min-w-0"><p className="text-sm font-medium text-white">${Number(e.amount).toFixed(2)}</p><p className="text-[11px] text-zinc-500">{formatDate(e.created_at)}</p></div><span className="shrink-0 text-[11px] text-zinc-500">{e.source_action}</span></div>))}
-            {activeTab === "withdrawals" && (withdrawals.length === 0 ? <p className="py-8 text-center text-sm text-zinc-500">No withdrawal requests yet.</p> : withdrawals.map((w) => <div key={w.id} className="flex items-center justify-between gap-3 border-b border-white/5 py-3 last:border-0"><div className="min-w-0"><p className="text-sm font-medium text-white">${Number(w.amount).toFixed(2)}</p><p className="truncate text-[11px] text-zinc-500">{w.method} — {formatDate(w.created_at)}</p></div><span className="shrink-0 text-[11px] font-medium" style={{ color: w.status === "completed" ? "#86efac" : w.status === "rejected" ? "#f87171" : GOLD_LIGHT }}>{w.status}</span></div>))}
-          </motion.div>
-        </AnimatePresence>
-      </section>
-    </motion.div>
-  );
-
-  const content = (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4 md:space-y-6 max-w-5xl mx-auto pb-24 md:pb-16 font-['Work_Sans'] text-zinc-400"
-      style={{ fontFamily: "'Work Sans', system-ui, sans-serif" }}
-    >
-      {/* Hero Block */}
-      <div
-        className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-white/5"
-        style={{ background: SURFACE }}
-      >
-        <div className="flex flex-col md:flex-row">
-          <div className="p-5 md:p-12 flex-1 flex flex-col justify-center space-y-3 md:space-y-4 order-2 md:order-1">
-            <div
-              className="inline-flex w-fit items-center px-2.5 py-1 rounded-full text-[9px] md:text-[10px] font-bold tracking-widest uppercase"
-              style={{
-                background: "rgba(201,168,76,0.10)",
-                border: "1px solid rgba(201,168,76,0.20)",
-                color: GOLD_LIGHT,
-              }}
-            >
-              {tierName} Tier
-            </div>
-            <h1
-              className="text-3xl md:text-5xl text-white leading-tight"
-              style={{ fontFamily: "'Instrument Serif', serif" }}
-            >
-              Megsy Referral Program
-            </h1>
-            <p className="text-sm md:text-base text-zinc-500 max-w-sm">
-              Earn {commissionPct}% recurring commission on every payment made by your referrals — forever.
-            </p>
-            <div className="pt-2 md:pt-4 flex items-end justify-between md:items-center md:justify-start gap-4 md:gap-6 flex-wrap">
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase tracking-widest text-zinc-500">Available Balance</p>
-                <p className="text-2xl font-semibold text-white">${availableBalance.toFixed(2)}</p>
-                {stats && stats.pendingEarnings > 0 && (
-                  <p className="text-[10px] text-zinc-500">${stats.pendingEarnings.toFixed(2)} pending</p>
-                )}
-              </div>
-              <button
-                onClick={() => navigate("/settings/withdraw")}
-                className="px-5 md:px-6 py-2.5 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
-                style={{
-                  background: `linear-gradient(to top right, ${GOLD}, ${GOLD_LIGHT})`,
-                  color: NOIR,
-                }}
-              >
-                Withdraw
-              </button>
-            </div>
-          </div>
-          <div
-            className="md:w-1/2 relative h-32 md:h-auto md:min-h-[300px] overflow-hidden flex items-center justify-center order-1 md:order-2"
-            style={{ background: "rgba(13,13,13,0.5)" }}
-          >
-            <img
-              src={referralHero}
-              alt="Megsy Referral Program"
-              className="w-full h-full object-cover opacity-50 md:opacity-60 grayscale hover:grayscale-0 transition-all duration-700"
-            />
-            <div
-              className="absolute inset-0 md:hidden"
-              style={{ background: `linear-gradient(to bottom, transparent 40%, ${SURFACE})` }}
-            />
-            <div
-              className="absolute inset-0 hidden md:block"
-              style={{ background: `linear-gradient(to right, ${SURFACE}, transparent, transparent)` }}
-            />
-            <div
-              className="absolute inset-0 hidden md:block"
-              style={{ background: `linear-gradient(to top, ${SURFACE}, transparent, transparent)` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {[
-          { label: "Clicks", value: (stats?.totalClicks ?? 0).toString(), highlight: false },
-          { label: "Signups", value: (stats?.signups ?? referrals.length).toString(), highlight: false },
-          { label: "Conv. Rate", value: `${stats?.convRate ?? 0}%`, highlight: false },
-          { label: "Total Earned", value: `$${totalEarned.toFixed(2)}`, highlight: true },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="p-4 md:p-6 rounded-2xl"
-            style={{
-              background: SURFACE,
-              border: `1px solid ${s.highlight ? "rgba(201,168,76,0.30)" : "rgba(255,255,255,0.05)"}`,
-            }}
-          >
-            <p
-              className="text-[9px] md:text-[10px] uppercase tracking-widest mb-1.5 md:mb-2"
-              style={{ color: s.highlight ? GOLD : "#71717a" }}
-            >
-              {s.label}
-            </p>
-            <p
-              className="text-2xl md:text-3xl truncate"
-              style={{
-                fontFamily: "'Instrument Serif', serif",
-                color: s.highlight ? GOLD_LIGHT : "#fff",
-              }}
-            >
-              {s.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Milestones */}
-      {stats && stats.milestones.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-[10px] uppercase tracking-widest" style={{ color: "#52525b" }}>Your Milestones</p>
-          <div className="flex flex-wrap gap-2">
-            {stats.milestones.map((m) => (
-              <div
-                key={m.milestone_key}
-                className="px-3 py-1.5 rounded-full text-[11px] font-semibold"
-                style={{
-                  background: "rgba(201,168,76,0.10)",
-                  border: "1px solid rgba(201,168,76,0.20)",
-                  color: GOLD_LIGHT,
-                }}
-              >
-                {MILESTONE_LABELS[m.milestone_key] || m.milestone_key}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Interaction Grid */}
-      <div className="grid md:grid-cols-12 gap-4 md:gap-6">
-        {/* Links & Social */}
-        <div className="md:col-span-7 space-y-6">
-          <div
-            className="p-5 md:p-8 rounded-2xl md:rounded-3xl space-y-5 md:space-y-6"
-            style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}
-          >
-            <h3 className="text-white font-medium">Your Referral Assets</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] uppercase tracking-widest block mb-2" style={{ color: "#52525b" }}>
-                  Tracking Link
-                </label>
-                <div
-                  className="flex items-center gap-2 rounded-xl p-1 pl-4"
-                  style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.10)" }}
-                >
-                  <span className="text-xs truncate text-zinc-500 flex-1 min-w-0">{referralLink || "Loading..."}</span>
-                  <button
-                    onClick={handleCopy}
-                    className="p-3 text-zinc-400 transition-colors ml-auto hover:text-[#f0d78c]"
-                  >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] uppercase tracking-widest block mb-2" style={{ color: "#52525b" }}>
-                  Personal Landing Page
-                </label>
-                <div
-                  className="flex items-center gap-2 rounded-xl p-1 pl-4"
-                  style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.10)" }}
-                >
-                  <span className="text-xs truncate text-zinc-500 flex-1 min-w-0">{landingLink || "Loading..."}</span>
-                  <button
-                    onClick={handleCopyLanding}
-                    className="p-3 text-zinc-400 transition-colors ml-auto hover:text-[#f0d78c]"
-                  >
-                    {copiedLanding ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-zinc-600">
-                Top: tracking link (instant signup). Bottom: personal landing page with your name.
-              </p>
-            </div>
-
-            {shareData && (
-              <div className="pt-4">
-                <p className="text-[10px] uppercase tracking-widest mb-4" style={{ color: "#52525b" }}>Quick Share</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {[
-                    { key: "whatsapp", label: "WhatsApp" },
-                    { key: "twitter", label: "X" },
-                    { key: "telegram", label: "Telegram" },
-                    { key: "email", label: "Email" },
-                    { key: "qr", label: "QR" },
-                  ].map((b) => (
-                    <button
-                      key={b.key}
-                      onClick={() => (b.key === "qr" ? setShowQR(true) : handleShare(b.key))}
-                      className="py-2 rounded-lg text-[10px] font-medium transition-colors uppercase hover:bg-white/5"
-                      style={{
-                        border: "1px solid rgba(255,255,255,0.05)",
-                        color: b.key === "qr" ? GOLD_LIGHT : "#d4d4d8",
-                      }}
-                    >
-                      {b.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {stats && stats.pendingEarnings > 0 && (
+              <p className="mt-1 text-[11px] text-white/45">${stats.pendingEarnings.toFixed(2)} pending</p>
             )}
           </div>
-        </div>
-
-        {/* Templates */}
-        <div className="md:col-span-5">
-          <div
-            className="p-5 md:p-8 rounded-2xl md:rounded-3xl space-y-5 md:space-y-6 h-full"
-            style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/settings/withdraw")}
+            className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-[14px] font-semibold text-black shadow-[0_10px_30px_-10px_rgba(255,255,255,0.6)] transition-all hover:shadow-[0_14px_40px_-12px_rgba(255,255,255,0.8)]"
           >
-            <h3 className="text-white font-medium">Share Templates</h3>
-
-            <div className="space-y-4">
-              {shareTemplates.map((t) => (
-                <div key={t.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="text-[10px] font-bold tracking-widest uppercase"
-                      style={{ color: GOLD }}
-                    >
-                      {t.label}
-                    </span>
-                    <button
-                      onClick={() => handleCopyTemplate(t.id, t.text)}
-                      className="text-[10px] font-bold text-white hover:text-[#f0d78c] transition-colors uppercase tracking-widest inline-flex items-center gap-1"
-                    >
-                      {copiedMessage === t.id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                      {copiedMessage === t.id ? "Copied" : "Copy Text"}
-                    </button>
-                  </div>
-                  <div
-                    className="text-xs leading-relaxed text-zinc-500 p-4 rounded-xl whitespace-pre-line"
-                    style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.05)" }}
-                  >
-                    {t.text}
-                  </div>
-                </div>
-              ))}
-              {shareTemplates.length === 0 && (
-                <p className="text-xs text-zinc-600">Loading templates…</p>
-              )}
-            </div>
-          </div>
+            <Wallet className="h-4 w-4" />
+            Withdraw earnings
+          </motion.button>
         </div>
       </div>
+    </Glass>
+  );
 
-      {/* Streak + Best day */}
-      {stats && (stats.streak > 0 || stats.bestDay.clicks > 0) && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-6 rounded-2xl" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Streak</p>
-            <p className="text-3xl text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>{stats.streak}d</p>
-          </div>
-          <div className="p-6 rounded-2xl" style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Personal Best</p>
-            <p className="text-3xl text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>{stats.bestDay.clicks}</p>
+  const statCards = [
+    { label: "Clicks", value: (stats?.totalClicks ?? 0).toString(), icon: TrendingUp },
+    { label: "Signups", value: (stats?.signups ?? referrals.length).toString(), icon: Users },
+    { label: "Conv. rate", value: `${stats?.convRate ?? 0}%`, icon: Sparkles },
+    { label: "Earned", value: `$${totalEarned.toFixed(2)}`, icon: DollarSign, accent: true },
+  ];
+
+  const statsGrid = (
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {statCards.map((s, i) => (
+        <motion.div
+          key={s.label}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 * i }}
+        >
+          <Glass className="p-4 md:p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/55">{s.label}</p>
+              <s.icon className={"h-4 w-4 " + (s.accent ? "text-white" : "text-white/45")} />
+            </div>
+            <p className={"mt-3 text-[28px] font-semibold leading-none tracking-tight " + (s.accent ? "text-white" : "text-white/95")}>
+              {s.value}
+            </p>
+          </Glass>
+        </motion.div>
+      ))}
+    </div>
+  );
+
+  const linkRow = (label: string, value: string, isCopied: boolean, onCopy: () => void) => (
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-2 pl-4">
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/50">{label}</p>
+        <p className="mt-0.5 truncate text-[13px] text-white/85">{value || "Loading…"}</p>
+      </div>
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        onClick={onCopy}
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.08] text-white/80 transition-colors hover:bg-white/[0.16]"
+        aria-label={`Copy ${label}`}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {isCopied ? (
+            <motion.span key="ok" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }}>
+              <Check className="h-4 w-4 text-emerald-300" />
+            </motion.span>
+          ) : (
+            <motion.span key="cp" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }}>
+              <Copy className="h-4 w-4" />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+    </div>
+  );
+
+  const assetsBlock = (
+    <Glass className="space-y-4 p-5 md:p-7">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[15px] font-semibold text-white">Your referral assets</h3>
+        <GlassPill><Share2 className="h-3 w-3" /> Ready</GlassPill>
+      </div>
+      <div className="space-y-3">
+        {linkRow("Tracking link", referralLink, copied, handleCopy)}
+        {linkRow("Personal landing page", landingLink, copiedLanding, handleCopyLanding)}
+      </div>
+
+      {shareData && (
+        <div className="space-y-3 pt-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/50">Quick share</p>
+          <div className="grid grid-cols-5 gap-2">
+            {[
+              { key: "whatsapp", label: "WhatsApp" },
+              { key: "twitter", label: "X" },
+              { key: "telegram", label: "Telegram" },
+              { key: "email", label: "Email" },
+              { key: "qr", label: "QR" },
+            ].map((b) => (
+              <motion.button
+                key={b.key}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => (b.key === "qr" ? setShowQR(true) : handleShare(b.key))}
+                className="min-h-11 rounded-2xl border border-white/10 bg-white/[0.06] px-2 text-[11px] font-semibold text-white/85 transition-colors hover:bg-white/[0.14]"
+              >
+                {b.label}
+              </motion.button>
+            ))}
           </div>
         </div>
       )}
+    </Glass>
+  );
 
-      {/* Tabs */}
-      <div
-        className="flex rounded-full p-1"
-        style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}
-      >
-        {(["insights", "referrals", "earnings", "withdrawals"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setActiveTab(t)}
-            className={`flex-1 py-2 px-2 rounded-full text-[11px] font-semibold transition-all capitalize ${
-              activeTab === t ? "text-[#0d0d0d]" : "text-zinc-400 hover:text-white"
-            }`}
-            style={
-              activeTab === t
-                ? { background: `linear-gradient(to top right, ${GOLD}, ${GOLD_LIGHT})` }
-                : undefined
-            }
+  const templatesBlock = (
+    <Glass className="space-y-4 p-5 md:p-7">
+      <h3 className="text-[15px] font-semibold text-white">Message templates</h3>
+      <div className="space-y-3">
+        {shareTemplates.map((t) => (
+          <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">{t.label}</span>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleCopyTemplate(t.id, t.text)}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85 hover:text-white"
+              >
+                {copiedMessage === t.id ? <Check className="h-3 w-3 text-emerald-300" /> : <Copy className="h-3 w-3" />}
+                {copiedMessage === t.id ? "Copied" : "Copy"}
+              </motion.button>
+            </div>
+            <p className="whitespace-pre-line text-[12.5px] leading-relaxed text-white/65 line-clamp-3">{t.text}</p>
+          </div>
+        ))}
+        {shareTemplates.length === 0 && <p className="py-4 text-center text-xs text-white/40">Loading templates…</p>}
+      </div>
+    </Glass>
+  );
+
+  const milestonesBlock = stats && stats.milestones.length > 0 && (
+    <Glass className="p-5">
+      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/50">Milestones</p>
+      <div className="flex flex-wrap gap-2">
+        {stats.milestones.map((m) => (
+          <span
+            key={m.milestone_key}
+            className="rounded-full border border-white/20 bg-gradient-to-b from-white/15 to-white/[0.04] px-3 py-1.5 text-[11px] font-semibold text-white"
           >
-            {t}
-          </button>
+            ✦ {MILESTONE_LABELS[m.milestone_key] || m.milestone_key}
+          </span>
         ))}
       </div>
+    </Glass>
+  );
+
+  const tabsBlock = (
+    <>
+      <Glass className="p-1">
+        <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {(["insights", "referrals", "earnings", "withdrawals"] as const).map((t) => {
+            const active = activeTab === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className="relative shrink-0 flex-1 rounded-full px-4 py-2.5 text-[12px] font-semibold capitalize transition-colors"
+              >
+                {active && (
+                  <motion.span
+                    layoutId="ref-tab-pill"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_6px_18px_-6px_rgba(255,255,255,0.5)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span className={"relative " + (active ? "text-black" : "text-white/70")}>{t}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Glass>
 
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.15 }}
-          className="p-5 md:p-8 rounded-2xl md:rounded-3xl space-y-4"
-          style={{ background: SURFACE, border: "1px solid rgba(255,255,255,0.05)" }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18 }}
         >
-          {activeTab === "insights" && (
-            !stats ? (
-              <p className="text-center text-sm text-zinc-500 py-10">Loading insights…</p>
-            ) : (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <p className="text-[10px] uppercase tracking-widest" style={{ color: GOLD }}>Top Sources</p>
-                  {stats.topSources.length === 0 ? (
-                    <p className="text-sm text-zinc-500 py-2">No clicks yet.</p>
-                  ) : stats.topSources.map((s) => (
-                    <div key={s.source} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                      <p className="text-sm font-medium text-white capitalize">{s.source}</p>
-                      <p className="text-[11px] text-zinc-500">{s.clicks} clicks · {s.conversions} conv.</p>
+          <Glass className="space-y-4 p-5 md:p-7">
+            {activeTab === "insights" && (
+              !stats ? <p className="py-10 text-center text-sm text-white/50">Loading insights…</p> : (
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">Top sources</p>
+                    {stats.topSources.length === 0
+                      ? <p className="py-2 text-sm text-white/50">No clicks yet.</p>
+                      : stats.topSources.map((s) => (
+                          <div key={s.source} className="flex items-center justify-between border-b border-white/8 py-2.5 last:border-0">
+                            <p className="text-sm font-medium capitalize text-white">{s.source}</p>
+                            <p className="text-[11px] text-white/55">{s.clicks} clicks · {s.conversions} conv.</p>
+                          </div>
+                        ))}
+                  </div>
+                  {stats.topCountries.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">Top countries</p>
+                      {stats.topCountries.map((c) => (
+                        <div key={c.country} className="flex items-center justify-between border-b border-white/8 py-2.5 last:border-0">
+                          <p className="text-sm font-medium text-white">{c.country}</p>
+                          <p className="text-[11px] text-white/55">{c.count}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-center">
+                    <p className="text-[28px] font-semibold tracking-tight text-white">{stats.peakHour}:00 UTC</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/55">Peak click hour</p>
+                  </div>
                 </div>
-
-                {stats.topCountries.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-[10px] uppercase tracking-widest" style={{ color: GOLD }}>Top Countries</p>
-                    {stats.topCountries.map((c) => (
-                      <div key={c.country} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                        <p className="text-sm font-medium text-white">{c.country}</p>
-                        <p className="text-[11px] text-zinc-500">{c.count}</p>
+              )
+            )}
+            {activeTab === "referrals" && (
+              referrals.length === 0
+                ? <p className="py-10 text-center text-sm text-white/50">No referrals yet. Share your link to get started.</p>
+                : referrals.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between border-b border-white/8 py-3 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-white">User {r.referred_id.substring(0, 8)}…</p>
+                        <p className="text-[11px] text-white/55">{formatDate(r.created_at)}</p>
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl text-center" style={{ background: NOIR, border: "1px solid rgba(255,255,255,0.05)" }}>
-                  <p className="text-2xl text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>{stats.peakHour}:00 UTC</p>
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Peak Click Hour</p>
-                </div>
-              </div>
-            )
-          )}
-
-          {activeTab === "referrals" && (
-            referrals.length === 0 ? (
-              <p className="text-center text-sm text-zinc-500 py-10">No referrals yet. Share your link to get started.</p>
-            ) : (
-              referrals.map((r) => (
-                <div key={r.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-white">User {r.referred_id.substring(0, 8)}…</p>
-                    <p className="text-[11px] text-zinc-500">{formatDate(r.created_at)}</p>
-                  </div>
-                  <span className="text-[11px] font-medium" style={{ color: r.status === "active" ? "#86efac" : GOLD_LIGHT }}>
-                    {r.status}
-                  </span>
-                </div>
-              ))
-            )
-          )}
-
-          {activeTab === "earnings" && (
-            earnings.length === 0 ? (
-              <p className="text-center text-sm text-zinc-500 py-10">No earnings yet.</p>
-            ) : (
-              earnings.map((e) => (
-                <div key={e.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-white">${Number(e.amount).toFixed(2)}</p>
-                    <p className="text-[11px] text-zinc-500">{formatDate(e.created_at)}</p>
-                  </div>
-                  <span className="text-[11px] text-zinc-500">{e.source_action}</span>
-                </div>
-              ))
-            )
-          )}
-
-          {activeTab === "withdrawals" && (
-            withdrawals.length === 0 ? (
-              <p className="text-center text-sm text-zinc-500 py-10">No withdrawal requests yet.</p>
-            ) : (
-              withdrawals.map((w) => (
-                <div key={w.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-white">${Number(w.amount).toFixed(2)}</p>
-                    <p className="text-[11px] text-zinc-500">{w.method} — {formatDate(w.created_at)}</p>
-                  </div>
-                  <span
-                    className="text-[11px] font-medium"
-                    style={{
-                      color:
-                        w.status === "completed" ? "#86efac" :
-                        w.status === "rejected" ? "#f87171" : GOLD_LIGHT,
-                    }}
-                  >
-                    {w.status}
-                  </span>
-                </div>
-              ))
-            )
-          )}
+                      <span className={"text-[11px] font-semibold " + (r.status === "active" ? "text-emerald-300" : "text-white/70")}>
+                        {r.status}
+                      </span>
+                    </div>
+                  ))
+            )}
+            {activeTab === "earnings" && (
+              earnings.length === 0
+                ? <p className="py-10 text-center text-sm text-white/50">No earnings yet.</p>
+                : earnings.map((e) => (
+                    <div key={e.id} className="flex items-center justify-between border-b border-white/8 py-3 last:border-0">
+                      <div>
+                        <p className="text-sm font-semibold text-white">${Number(e.amount).toFixed(2)}</p>
+                        <p className="text-[11px] text-white/55">{formatDate(e.created_at)}</p>
+                      </div>
+                      <span className="text-[11px] text-white/55">{e.source_action}</span>
+                    </div>
+                  ))
+            )}
+            {activeTab === "withdrawals" && (
+              withdrawals.length === 0
+                ? <p className="py-10 text-center text-sm text-white/50">No withdrawal requests yet.</p>
+                : withdrawals.map((w) => (
+                    <div key={w.id} className="flex items-center justify-between border-b border-white/8 py-3 last:border-0">
+                      <div>
+                        <p className="text-sm font-semibold text-white">${Number(w.amount).toFixed(2)}</p>
+                        <p className="text-[11px] text-white/55">{w.method} — {formatDate(w.created_at)}</p>
+                      </div>
+                      <span className={"text-[11px] font-semibold " + (
+                        w.status === "completed" ? "text-emerald-300" :
+                        w.status === "rejected" ? "text-rose-300" : "text-white/70"
+                      )}>{w.status}</span>
+                    </div>
+                  ))
+            )}
+          </Glass>
         </motion.div>
       </AnimatePresence>
+    </>
+  );
+
+  const desktopContent = (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto max-w-5xl space-y-5 pb-16"
+    >
+      {heroBlock}
+      {statsGrid}
+      <div className="grid gap-5 md:grid-cols-12">
+        <div className="md:col-span-7 space-y-5">{assetsBlock}</div>
+        <div className="md:col-span-5">{templatesBlock}</div>
+      </div>
+      {milestonesBlock}
+      {tabsBlock}
+    </motion.div>
+  );
+
+  const mobileContent = (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pb-28">
+      {heroBlock}
+      {statsGrid}
+      {milestonesBlock}
+      {assetsBlock}
+      {templatesBlock}
+      {tabsBlock}
     </motion.div>
   );
 
   const qrModal = showQR && shareData && (
-    <div
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
       onClick={() => setShowQR(false)}
     >
-      <div
-        className="rounded-2xl p-6 max-w-xs w-full space-y-4 relative"
-        style={{ background: SURFACE, border: "1px solid rgba(201,168,76,0.20)" }}
+      <motion.div
+        initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={() => setShowQR(false)}
-          className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/5"
-        >
-          <X className="w-4 h-4 text-zinc-500" />
-        </button>
-        <p className="text-center text-[11px] text-zinc-500 uppercase tracking-wider inline-flex items-center justify-center gap-2 w-full">
-          <QrCode className="w-3 h-3" /> Scan to Join
-        </p>
-        <img src={shareData.qr_url} alt="Referral QR code" className="w-full rounded-xl bg-white p-2" />
-        <p className="text-center text-[10px] text-zinc-500 font-mono break-all">{shareData.url}</p>
-      </div>
-    </div>
+        <Glass className="relative w-[20rem] max-w-full space-y-4 p-6">
+          <button
+            onClick={() => setShowQR(false)}
+            className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <p className="inline-flex w-full items-center justify-center gap-2 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-white/65">
+            <QrCode className="h-3 w-3" /> Scan to join
+          </p>
+          <img src={shareData.qr_url} alt="Referral QR" className="w-full rounded-2xl bg-white p-3" />
+          <p className="break-all text-center font-mono text-[10px] text-white/55">{shareData.url}</p>
+        </Glass>
+      </motion.div>
+    </motion.div>
   );
 
   return (
     <>
-      <div className="hidden md:block" style={{ background: NOIR }}>
-        <DesktopSettingsLayout title="Referrals" subtitle="Earn commission by inviting friends">
-          {content}
+      <LiveAurora tone="indigo" />
+
+      {/* Desktop */}
+      <div className="hidden md:block">
+        <DesktopSettingsLayout title="Referrals" subtitle="Earn lifetime commission by inviting friends">
+          {desktopContent}
         </DesktopSettingsLayout>
       </div>
 
-      <div className="block h-[100dvh] w-full max-w-full overflow-y-auto overflow-x-hidden md:hidden" style={{ background: NOIR }}>
-        <div className="mx-auto w-full max-w-md overflow-hidden">
-          <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 backdrop-blur-xl" style={{ background: "rgba(13,13,13,0.86)" }}>
-            <button onClick={() => navigate("/settings")} className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:text-white" style={{ background: "rgba(255,255,255,0.04)" }}>
-              <ArrowLeft className="w-5 h-5" />
+      {/* Mobile */}
+      <div className="block h-[100dvh] w-full overflow-y-auto overflow-x-hidden md:hidden">
+        <div className="mx-auto w-full max-w-md">
+          <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-white/8 bg-black/30 px-4 py-3 backdrop-blur-2xl">
+            <button
+              onClick={() => navigate("/settings")}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/80 hover:bg-white/15"
+            >
+              <ArrowLeft className="h-5 w-5" />
             </button>
-            <h1 className="text-xl font-bold text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>
-              Referrals
-            </h1>
+            <h1 className="text-[17px] font-semibold tracking-tight text-white">Referrals</h1>
           </div>
-          <div className="w-full max-w-full overflow-hidden px-4 pt-1">{mobileContent}</div>
+          <div className="px-4 pt-4">{mobileContent}</div>
         </div>
       </div>
-      {qrModal}
+
+      <AnimatePresence>{qrModal}</AnimatePresence>
     </>
   );
 };

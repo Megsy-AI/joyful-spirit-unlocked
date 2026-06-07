@@ -3,12 +3,33 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sparkles, Gift, Zap, Shield, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import FancyButton from "@/components/branding/FancyButton";
+import LiveAurora from "@/components/referral/LiveAurora";
 
 interface RefInfo {
   displayName: string;
   avatarUrl: string | null;
 }
+
+const Glass = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div
+    className={
+      "relative rounded-[28px] border border-white/12 bg-white/[0.06] " +
+      "shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_30px_60px_-30px_rgba(0,0,0,0.6)] " +
+      "backdrop-blur-2xl backdrop-saturate-150 " +
+      className
+    }
+  >
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 rounded-[28px] opacity-70"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.04) 100%)",
+      }}
+    />
+    <div className="relative">{children}</div>
+  </div>
+);
 
 const ReferralLandingPage = () => {
   const { code } = useParams<{ code: string }>();
@@ -19,22 +40,13 @@ const ReferralLandingPage = () => {
   useEffect(() => {
     if (!code) return;
     const clean = code.trim().toUpperCase().slice(0, 64);
-
     (async () => {
       try {
         const { data: codeRow } = await supabase
-          .from("referral_codes")
-          .select("user_id")
-          .ilike("code", clean)
-          .maybeSingle();
-
+          .from("referral_codes").select("user_id").ilike("code", clean).maybeSingle();
         if (codeRow?.user_id) {
           const { data: profile } = await supabase
-            .from("profiles")
-            .select("display_name, avatar_url")
-            .eq("id", codeRow.user_id)
-            .maybeSingle();
-
+            .from("profiles").select("display_name, avatar_url").eq("id", codeRow.user_id).maybeSingle();
           setInfo({
             displayName: profile?.display_name || "A friend",
             avatarUrl: profile?.avatar_url || null,
@@ -50,97 +62,129 @@ const ReferralLandingPage = () => {
     })();
   }, [code]);
 
-  const handleJoin = () => {
-    if (code) navigate(`/ref/${code}`);
-  };
+  const handleJoin = () => { if (code) navigate(`/ref/${code}`); };
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </div>
+      <>
+        <LiveAurora tone="rose" />
+        <div className="flex min-h-[100dvh] items-center justify-center">
+          <p className="text-sm text-white/60">Loading…</p>
+        </div>
+      </>
     );
   }
 
+  const initials = (info?.displayName || "A").charAt(0).toUpperCase();
+
   return (
-    <div className="min-h-[100dvh] bg-background overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-10"
-        >
-          {/* Inviter card */}
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              Personal Invitation
-            </div>
-
-            <div className="flex flex-col items-center gap-3">
-              {info?.avatarUrl ? (
-                <img
-                  src={info.avatarUrl}
-                  alt={info.displayName}
-                  className="w-20 h-20 rounded-full object-cover ring-2 ring-primary/20"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-2xl font-bold text-primary">
-                  {info?.displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <p className="text-xs text-muted-foreground">You're invited by</p>
-                <p className="font-display text-xl font-bold text-foreground">
-                  {info?.displayName}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Hero */}
-          <div className="text-center space-y-4">
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-              Join Megsy AI today
-            </h1>
-            <p className="text-base text-muted-foreground max-w-md mx-auto">
-              The all-in-one AI workspace — chat, image, video, code, and research, in one place.
-            </p>
-          </div>
-
-          {/* Benefits */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { icon: Gift, title: "Free to start", desc: "No credit card needed" },
-              { icon: Zap, title: "All AI models", desc: "Chat, image, video, code" },
-              { icon: Shield, title: "Private & secure", desc: "Your data, your control" },
-            ].map((b) => (
-              <div
-                key={b.title}
-                className="p-4 rounded-2xl bg-muted/20 border border-border/40 text-center"
-              >
-                <b.icon className="w-5 h-5 mx-auto mb-2 text-primary" />
-                <p className="text-sm font-semibold text-foreground">{b.title}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <div className="space-y-3">
-            <FancyButton onClick={handleJoin} className="w-full">
-              <span className="inline-flex items-center justify-center gap-2">
-                Accept Invitation
-                <ArrowRight className="w-4 h-4" />
+    <>
+      <LiveAurora tone="rose" />
+      <div className="min-h-[100dvh] overflow-y-auto">
+        <div className="mx-auto max-w-xl px-4 py-10 md:py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-6"
+          >
+            {/* Inviter glass card */}
+            <Glass className="overflow-hidden p-6 text-center md:p-8">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-xl">
+                <Sparkles className="h-3 w-3" /> Personal invitation
               </span>
-            </FancyButton>
-            <p className="text-[11px] text-muted-foreground text-center">
-              Code: <span className="font-mono text-foreground">{code}</span>
-            </p>
-          </div>
-        </motion.div>
+
+              <div className="mt-5 flex flex-col items-center gap-3">
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.1 }}
+                  className="relative"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 -z-10 rounded-full blur-2xl"
+                    style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.45), transparent 70%)" }}
+                  />
+                  {info?.avatarUrl ? (
+                    <img
+                      src={info.avatarUrl}
+                      alt={info.displayName}
+                      className="h-24 w-24 rounded-full object-cover ring-2 ring-white/30"
+                    />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/15 text-3xl font-semibold text-white backdrop-blur-xl">
+                      {initials}
+                    </div>
+                  )}
+                </motion.div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">You're invited by</p>
+                  <p className="mt-1 text-[22px] font-semibold tracking-tight text-white">
+                    {info?.displayName}
+                  </p>
+                </div>
+              </div>
+            </Glass>
+
+            {/* Hero */}
+            <div className="px-2 text-center">
+              <h1 className="text-[40px] md:text-[56px] font-semibold leading-[1.05] tracking-[-0.025em] text-white">
+                Join{" "}
+                <span className="bg-gradient-to-r from-white via-white/80 to-white/50 bg-clip-text text-transparent">
+                  Megsy AI
+                </span>
+                <br />today.
+              </h1>
+              <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-white/65">
+                The all-in-one AI workspace — chat, image, video, code & research in one place.
+              </p>
+            </div>
+
+            {/* Benefits */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[
+                { icon: Gift, title: "Free to start", desc: "No card needed" },
+                { icon: Zap, title: "All models", desc: "Chat · image · video · code" },
+                { icon: Shield, title: "Private", desc: "Your data, your control" },
+              ].map((b, i) => (
+                <motion.div
+                  key={b.title}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + i * 0.07 }}
+                >
+                  <Glass className="p-5 text-center">
+                    <div className="mx-auto mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur-xl">
+                      <b.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <p className="text-[13px] font-semibold text-white">{b.title}</p>
+                    <p className="mt-1 text-[11px] text-white/55">{b.desc}</p>
+                  </Glass>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+              className="space-y-3"
+            >
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={handleJoin}
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-[15px] font-semibold text-black shadow-[0_18px_40px_-12px_rgba(255,255,255,0.55)] transition-all hover:shadow-[0_22px_50px_-12px_rgba(255,255,255,0.75)]"
+              >
+                Accept invitation
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </motion.button>
+              <p className="text-center text-[11px] text-white/55">
+                Code: <span className="font-mono text-white/85">{code}</span>
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
