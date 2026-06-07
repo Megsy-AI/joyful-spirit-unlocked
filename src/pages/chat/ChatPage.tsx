@@ -424,7 +424,7 @@ const ChatPage = () => {
   const [connectorsOpen, setConnectorsOpen] = useState(false);
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const [chatMenuView, setChatMenuView] = useState<"main" | "invite" | "rename" | "pin" | "delete">("main");
+  const [chatMenuView, setChatMenuView] = useState<"main" | "invite" | "share" | "rename" | "pin" | "delete">("main");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
