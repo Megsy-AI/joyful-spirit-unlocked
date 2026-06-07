@@ -159,82 +159,140 @@ const ReferralsPage = () => {
           ))}
         </section>
 
-        {/* Promoter CTA */}
+        {/* Promoter CTA — premium card */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mt-10 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a1428] via-black to-[#1a0a0f] p-8 md:p-12"
+          className="relative mt-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#0a0d1a] p-6 sm:p-10 md:p-14"
         >
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#3B82F6]/25 blur-3xl" />
-          <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#EF4444]/25 blur-3xl" />
-          <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
-            <div>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-[#93C5FD]">Official Partnership</span>
-              <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight text-white md:text-5xl">
-                Become an <span className="bg-gradient-to-r from-[#3B82F6] to-[#EF4444] bg-clip-text text-transparent">Official Promoter</span>
-              </h2>
-              <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/70 md:text-base">
-                Commission up to 50% of earnings + free subscription + exclusive perks. Contact us now via WhatsApp and join the elite promoters.
-              </p>
+          {/* layered glows */}
+          <div className="pointer-events-none absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-[#3B82F6]/35 blur-[120px]" />
+          <div className="pointer-events-none absolute -bottom-32 left-[-10%] h-[420px] w-[420px] rounded-full bg-[#EF4444]/30 blur-[120px]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.6)_100%)]" />
+
+          <div className="relative flex flex-col items-center text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 backdrop-blur-xl">
+              <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[#3B82F6] to-[#EF4444]" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/80">
+                Invite-only program
+              </span>
             </div>
+
+            <h2 className="mt-6 font-display text-4xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl md:text-6xl">
+              Earn up to
+              <br />
+              <span className="bg-gradient-to-r from-[#60A5FA] via-[#A855F7] to-[#F87171] bg-clip-text text-transparent">
+                50% commission
+              </span>
+            </h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/65 sm:text-base">
+              Join our official promoter network — lifetime payouts, a free subscription, and exclusive partner perks.
+            </p>
+
+            {/* perks row */}
+            <div className="mt-7 grid w-full max-w-md grid-cols-3 gap-2">
+              {[
+                ["50%", "Commission"],
+                ["FREE", "Subscription"],
+                ["VIP", "Perks"],
+              ].map(([v, l]) => (
+                <div key={l} className="rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-3 backdrop-blur">
+                  <p className="font-display text-base font-black text-white sm:text-lg">{v}</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-wider text-white/45">{l}</p>
+                </div>
+              ))}
+            </div>
+
             <button
               onClick={openPromoter}
-              className="self-start rounded-2xl bg-gradient-to-r from-[#3B82F6] to-[#EF4444] px-8 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-2xl shadow-[#3B82F6]/30 transition hover:scale-[1.02]"
+              className="group relative mt-8 w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-r from-[#3B82F6] via-[#A855F7] to-[#EF4444] p-[1.5px] shadow-2xl shadow-[#3B82F6]/25 transition hover:scale-[1.02]"
             >
-              Join via WhatsApp
+              <span className="flex items-center justify-center gap-2 rounded-[14px] bg-[#0a0d1a] px-6 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition group-hover:bg-transparent">
+                Apply via WhatsApp
+              </span>
             </button>
+            <p className="mt-3 text-[11px] text-white/40">Replies usually within 24 hours</p>
           </div>
         </motion.section>
 
-        {/* Withdraw CTA */}
-        <section className="mt-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Ready to withdraw</p>
-            <p className="mt-3 font-display text-4xl font-black text-white">${available.toFixed(2)}</p>
-            <button
-              onClick={() => navigate("/settings/withdraw")}
-              className="mt-5 w-full rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              Withdraw Earnings
-            </button>
+        {/* Balance + Code — clean mobile-first */}
+        <section className="mt-8 space-y-4">
+          {/* Balance card */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f1a3a]/80 to-[#1a0a14]/80 p-6">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#3B82F6]/20 blur-2xl" />
+            <div className="relative flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Available balance</p>
+                <p className="mt-2 font-display text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  ${available.toFixed(2)}
+                </p>
+                <p className="mt-1 text-xs text-white/45">Min $10 · 2× per month</p>
+              </div>
+              <button
+                onClick={() => navigate("/settings/withdraw")}
+                disabled={available < 10}
+                className="shrink-0 rounded-2xl bg-white px-5 py-3 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+              >
+                Withdraw
+              </button>
+            </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Your referral code</p>
-            <p dir="ltr" className="mt-3 font-mono text-2xl font-bold text-white">{code}</p>
-            <button
-              onClick={copyLink}
-              className="mt-5 w-full rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              Copy Invite Link
-            </button>
+
+          {/* Code card */}
+          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Your code</p>
+                <p dir="ltr" className="mt-1.5 truncate font-mono text-lg font-bold text-white">{code}</p>
+              </div>
+              <button
+                onClick={copyLink}
+                className="shrink-0 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10"
+              >
+                Copy link
+              </button>
+            </div>
           </div>
         </section>
 
-        {/* Tabs */}
-        <section className="mt-12">
-          <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+        {/* Activity */}
+        <section className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
+              Activity
+            </h3>
+          </div>
+
+          {/* segmented control */}
+          <div className="flex w-full rounded-2xl border border-white/10 bg-white/[0.03] p-1">
             {([
-              ["referrals", "Referrals"],
-              ["earnings", "Earnings"],
-              ["withdrawals", "Withdrawals"],
-            ] as const).map(([k, label]) => (
+              ["referrals", "Referrals", refs.length],
+              ["earnings", "Earnings", earns.length],
+              ["withdrawals", "Payouts", wds.length],
+            ] as const).map(([k, label, count]) => (
               <button
                 key={k}
                 onClick={() => setTab(k)}
-                className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
-                  tab === k ? "bg-white text-black" : "text-white/60 hover:text-white"
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold transition sm:text-sm ${
+                  tab === k ? "bg-white text-black" : "text-white/55 hover:text-white"
                 }`}
               >
-                {label}
+                <span>{label}</span>
+                <span className={`rounded-full px-1.5 text-[10px] ${tab === k ? "bg-black/10 text-black/70" : "bg-white/10 text-white/50"}`}>
+                  {count}
+                </span>
               </button>
             ))}
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             {tab === "referrals" && (
               refs.length === 0 ? (
-                <p className="p-10 text-center text-sm text-white/50">No referrals yet.</p>
+                <div className="p-10 text-center">
+                  <p className="text-sm text-white/60">No referrals yet</p>
+                  <p className="mt-1 text-xs text-white/35">Share your link to start earning</p>
+                </div>
               ) : refs.map((r, i) => (
                 <div key={r.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
                   <p className="text-sm text-white/90">Friend #{i + 1}</p>
@@ -250,7 +308,10 @@ const ReferralsPage = () => {
 
             {tab === "earnings" && (
               earns.length === 0 ? (
-                <p className="p-10 text-center text-sm text-white/50">No earnings yet.</p>
+                <div className="p-10 text-center">
+                  <p className="text-sm text-white/60">No earnings yet</p>
+                  <p className="mt-1 text-xs text-white/35">Commissions appear after a friend subscribes</p>
+                </div>
               ) : earns.map((e, i) => (
                 <div key={e.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
                   <div>
@@ -266,7 +327,10 @@ const ReferralsPage = () => {
 
             {tab === "withdrawals" && (
               wds.length === 0 ? (
-                <p className="p-10 text-center text-sm text-white/50">No withdrawal requests.</p>
+                <div className="p-10 text-center">
+                  <p className="text-sm text-white/60">No payouts yet</p>
+                  <p className="mt-1 text-xs text-white/35">Request a withdrawal once you reach $10</p>
+                </div>
               ) : wds.map((w, i) => (
                 <div key={w.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
                   <div>
@@ -281,6 +345,7 @@ const ReferralsPage = () => {
             )}
           </div>
         </section>
+
       </main>
     </div>
   );
