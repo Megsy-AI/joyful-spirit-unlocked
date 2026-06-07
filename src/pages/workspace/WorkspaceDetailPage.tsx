@@ -17,6 +17,9 @@ export default function WorkspaceDetailPage() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>;
   }
 
+  const credits = Number(ctx.ws.credits ?? 0);
+  const lowCredits = credits < 50;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 bg-background/75 backdrop-blur-xl border-b border-border/60">
@@ -44,10 +47,19 @@ export default function WorkspaceDetailPage() {
                   {ctx.myRole || "member"}
                 </span>
                 <span className="text-muted-foreground/40">·</span>
-                <span className="tabular-nums">{Number(ctx.ws.credits).toFixed(0)} credits</span>
+                <span className={`tabular-nums ${lowCredits ? "text-destructive font-medium" : ""}`}>{credits.toFixed(0)} credits</span>
+                {lowCredits && <AlertTriangle className="w-3 h-3 text-destructive" />}
               </p>
             </div>
           </div>
+          {ctx.canBilling && (
+            <button
+              onClick={() => navigate(`/settings/workspaces/${ctx.ws!.id}/billing`)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-3.5 h-3.5" /> Top up
+            </button>
+          )}
           <PresenceBar workspaceId={ctx.ws.id} />
           <button
             onClick={() => setNavOpen((v) => !v)}
@@ -58,6 +70,7 @@ export default function WorkspaceDetailPage() {
           </button>
         </div>
       </header>
+
 
       <div className="max-w-7xl mx-auto px-6 sm:px-10 py-12 grid grid-cols-1 md:grid-cols-[232px_1fr] gap-10 lg:gap-14 animate-fade-in">
         <aside className={`${navOpen ? "block" : "hidden"} md:block`}>
