@@ -114,9 +114,6 @@ const ReferralsPage = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f1f]/55 via-[#0b0f1f]/55 to-[#0b0f1f]/90" />
           <div className="absolute inset-0 bg-gradient-to-tr from-[#1e3a8a]/40 via-transparent to-[#b91c1c]/30 mix-blend-overlay" />
           <div className="relative z-10 px-6 py-16 text-center md:px-12 md:py-28">
-            <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-white/85 backdrop-blur">
-              Megsy Affiliate
-            </span>
             <h1 className="mt-6 font-display text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.95] text-white drop-shadow-2xl">
               Invite. Share.
               <br />
