@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import cairoTowerNile from "@/assets/cairo-tower-nile.jpg";
 
 const WHATSAPP_PHONE = "201098821812";
 const PROMOTER_MESSAGE =
@@ -115,29 +116,34 @@ const ReferralsPage = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
-          className="relative mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-br from-[#0f1530] via-[#0a0d1a] to-[#1a0a18] p-6 sm:p-8"
+          className="relative mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0a0d1a]"
         >
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-red-500/15 blur-3xl" />
+          {/* Background image */}
+          <div className="absolute inset-0">
+            <img
+              src={cairoTowerNile}
+              alt=""
+              className="h-full w-full object-cover opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#08090b] via-[#08090b]/70 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-transparent to-red-900/20" />
+          </div>
 
-          <div className="relative">
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">Available balance</p>
+          <div className="relative p-6 pt-32 sm:p-8 sm:pt-40">
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/60">Available balance</p>
             <p className="mt-3 text-[56px] font-semibold leading-none tracking-tight sm:text-[64px]">
-              <span className="text-white/40">$</span>{available.toFixed(2)}
+              <span className="text-white/50">$</span>{available.toFixed(2)}
             </p>
-            <p className="mt-3 text-sm text-white/45">
+            <p className="mt-3 text-sm text-white/55">
               ${totalEarned.toFixed(2)} earned · min $10 to withdraw
             </p>
 
             <button
               onClick={() => navigate("/settings/withdraw")}
               disabled={available < 10}
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 sm:w-auto sm:px-8"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-white py-3.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 sm:w-auto sm:px-8"
             >
               Withdraw
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2" stroke="currentColor" className="h-4 w-4">
-                <path d="M5 12h14M13 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
             </button>
           </div>
         </motion.section>
