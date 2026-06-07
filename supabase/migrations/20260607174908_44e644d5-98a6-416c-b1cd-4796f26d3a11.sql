@@ -1,0 +1,1 @@
+ALTER TABLE public.code_prompts ALTER COLUMN title DROP NOT NULL;
