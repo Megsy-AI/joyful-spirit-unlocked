@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import heroImg from "@/assets/cairo-tower-nile.jpg";
 
 const WHATSAPP_PHONE = "201098821812";
 const PROMOTER_MESSAGE =
@@ -14,24 +13,24 @@ interface Earning { id: string; amount: number; source_action: string; created_a
 interface Withdrawal { id: string; amount: number; status: string; method: string; created_at: string; }
 
 const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 const statusLabel = (s: string) =>
   ({ approved: "Approved", pending: "Pending", rejected: "Rejected", paid: "Paid", active: "Active" } as Record<string, string>)[s] ?? s;
 
-const statusColor = (s: string) => {
-  if (s === "approved" || s === "paid" || s === "active") return "bg-sky-500/15 text-sky-300 border-sky-500/30";
-  if (s === "rejected") return "bg-red-500/15 text-red-300 border-red-500/30";
-  return "bg-white/5 text-white/70 border-white/15";
+const statusDot = (s: string) => {
+  if (s === "approved" || s === "paid" || s === "active") return "bg-emerald-400";
+  if (s === "rejected") return "bg-red-400";
+  return "bg-white/30";
 };
 
 const BackButton = ({ onClick }: { onClick: () => void }) => (
   <button
     onClick={onClick}
     aria-label="Back"
-    className="fixed left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-white/[0.08] text-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition active:scale-95 hover:bg-white/[0.14]"
+    className="fixed left-4 top-4 z-50 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/40 text-white/90 backdrop-blur-xl transition active:scale-95 hover:bg-black/60"
   >
-    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" strokeWidth="2.4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" className="h-[18px] w-[18px]" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14.5 6 8.5 12l6 6" />
     </svg>
   </button>
@@ -82,190 +81,145 @@ const ReferralsPage = () => {
     toast.success("Link copied");
   };
 
+  const copyCode = async () => {
+    if (!code) return;
+    await navigator.clipboard.writeText(code);
+    toast.success("Code copied");
+  };
+
   const openPromoter = () => {
     const url = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(PROMOTER_MESSAGE)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const stats = [
-    { label: "Referrals", value: signups.toString() },
-    { label: "Total Earnings", value: `$${totalEarned.toFixed(2)}` },
-    { label: "Available", value: `$${available.toFixed(2)}` },
-    { label: "Withdrawals", value: wds.length.toString() },
-  ];
-
   return (
-    <div data-theme="dark" dir="ltr" className="min-h-[100dvh] bg-background text-foreground">
+    <div data-theme="dark" dir="ltr" className="min-h-[100dvh] bg-[#08090b] text-white antialiased">
       <BackButton onClick={() => navigate(-1)} />
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8 pt-16">
-        {/* Cinematic hero with Cairo Tower */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
+      <main className="mx-auto w-full max-w-2xl px-5 pb-32 pt-20 sm:px-6">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9 }}
-          className="relative mt-6 overflow-hidden rounded-3xl"
+          transition={{ duration: 0.5 }}
         >
-          <img
-            src={heroImg}
-            alt="Cairo Tower over the Nile"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f1f]/55 via-[#0b0f1f]/55 to-[#0b0f1f]/90" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#1e3a8a]/40 via-transparent to-[#b91c1c]/30 mix-blend-overlay" />
-          <div className="relative z-10 px-6 py-16 text-center md:px-12 md:py-28">
-            <h1 className="mt-6 font-display text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.95] text-white drop-shadow-2xl">
-              Invite. Share.
-              <br />
-              <span className="bg-gradient-to-r from-[#3B82F6] via-[#A855F7] to-[#EF4444] bg-clip-text text-transparent">Earn for life.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-sm leading-relaxed text-white/85 md:text-lg">
-              20% commission on every subscription your friends make — renews monthly as long as they stay with us.
+          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/40">Referrals</p>
+          <h1 className="mt-3 text-[34px] font-semibold leading-[1.1] tracking-tight sm:text-[40px]">
+            Earn 20% for life,<br />
+            <span className="text-white/45">on every friend you invite.</span>
+          </h1>
+        </motion.header>
+
+        {/* Balance — hero card */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="relative mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-gradient-to-br from-[#0f1530] via-[#0a0d1a] to-[#1a0a18] p-6 sm:p-8"
+        >
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-red-500/15 blur-3xl" />
+
+          <div className="relative">
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">Available balance</p>
+            <p className="mt-3 text-[56px] font-semibold leading-none tracking-tight sm:text-[64px]">
+              <span className="text-white/40">$</span>{available.toFixed(2)}
+            </p>
+            <p className="mt-3 text-sm text-white/45">
+              ${totalEarned.toFixed(2)} earned · min $10 to withdraw
             </p>
 
-            <div className="mx-auto mt-8 flex max-w-xl flex-col gap-2 rounded-2xl border border-white/15 bg-black/40 p-2 backdrop-blur sm:flex-row">
-              <input
-                value={link}
-                readOnly
-                dir="ltr"
-                className="flex-1 bg-transparent px-4 py-3 font-mono text-xs text-white/90 outline-none sm:text-sm"
-              />
-              <button
-                onClick={copyLink}
-                className="rounded-xl bg-gradient-to-r from-[#3B82F6] to-[#EF4444] px-6 py-3 text-sm font-bold text-white transition hover:opacity-90"
-              >
-                Copy Link
-              </button>
-            </div>
+            <button
+              onClick={() => navigate("/settings/withdraw")}
+              disabled={available < 10}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 sm:w-auto sm:px-8"
+            >
+              Withdraw
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2" stroke="currentColor" className="h-4 w-4">
+                <path d="M5 12h14M13 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           </div>
         </motion.section>
 
-        {/* Stats */}
-        <section className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {stats.map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06 }}
-              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur"
-            >
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">{s.label}</p>
-              <p className="mt-3 font-display text-3xl font-black tracking-tight text-white md:text-4xl">
-                {s.value}
-              </p>
-            </motion.div>
+        {/* Stats — minimal */}
+        <section className="mt-4 grid grid-cols-3 gap-3">
+          {[
+            { label: "Referrals", value: signups.toString() },
+            { label: "Earnings", value: `$${totalEarned.toFixed(0)}` },
+            { label: "Payouts", value: wds.length.toString() },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/40">{s.label}</p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight">{s.value}</p>
+            </div>
           ))}
         </section>
 
-        {/* Promoter CTA — premium card */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative mt-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#0a0d1a] p-6 sm:p-10 md:p-14"
-        >
-          {/* layered glows */}
-          <div className="pointer-events-none absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full bg-[#3B82F6]/35 blur-[120px]" />
-          <div className="pointer-events-none absolute -bottom-32 left-[-10%] h-[420px] w-[420px] rounded-full bg-[#EF4444]/30 blur-[120px]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.6)_100%)]" />
-
-          <div className="relative flex flex-col items-center text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 backdrop-blur-xl">
-              <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[#3B82F6] to-[#EF4444]" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/80">
-                Invite-only program
-              </span>
-            </div>
-
-            <h2 className="mt-6 font-display text-4xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl md:text-6xl">
-              Earn up to
-              <br />
-              <span className="bg-gradient-to-r from-[#60A5FA] via-[#A855F7] to-[#F87171] bg-clip-text text-transparent">
-                50% commission
-              </span>
-            </h2>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/65 sm:text-base">
-              Join our official promoter network — lifetime payouts, a free subscription, and exclusive partner perks.
-            </p>
-
-            {/* perks row */}
-            <div className="mt-7 grid w-full max-w-md grid-cols-3 gap-2">
-              {[
-                ["50%", "Commission"],
-                ["FREE", "Subscription"],
-                ["VIP", "Perks"],
-              ].map(([v, l]) => (
-                <div key={l} className="rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-3 backdrop-blur">
-                  <p className="font-display text-base font-black text-white sm:text-lg">{v}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-wider text-white/45">{l}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={openPromoter}
-              className="group relative mt-8 w-full max-w-sm overflow-hidden rounded-2xl bg-gradient-to-r from-[#3B82F6] via-[#A855F7] to-[#EF4444] p-[1.5px] shadow-2xl shadow-[#3B82F6]/25 transition hover:scale-[1.02]"
-            >
-              <span className="flex items-center justify-center gap-2 rounded-[14px] bg-[#0a0d1a] px-6 py-4 text-sm font-bold uppercase tracking-[0.18em] text-white transition group-hover:bg-transparent">
-                Apply via WhatsApp
-              </span>
+        {/* Share link */}
+        <section className="mt-8">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold text-white/90">Your invite link</h2>
+            <button onClick={copyCode} className="text-xs text-white/45 transition hover:text-white/80">
+              {code || "—"}
             </button>
-            <p className="mt-3 text-[11px] text-white/40">Replies usually within 24 hours</p>
           </div>
-        </motion.section>
-
-        {/* Balance + Code — clean mobile-first */}
-        <section className="mt-8 space-y-4">
-          {/* Balance card */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0f1a3a]/80 to-[#1a0a14]/80 p-6">
-            <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#3B82F6]/20 blur-2xl" />
-            <div className="relative flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Available balance</p>
-                <p className="mt-2 font-display text-4xl font-black tracking-tight text-white sm:text-5xl">
-                  ${available.toFixed(2)}
-                </p>
-                <p className="mt-1 text-xs text-white/45">Min $10 · 2× per month</p>
-              </div>
-              <button
-                onClick={() => navigate("/settings/withdraw")}
-                disabled={available < 10}
-                className="shrink-0 rounded-2xl bg-white px-5 py-3 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
-              >
-                Withdraw
-              </button>
-            </div>
-          </div>
-
-          {/* Code card */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-white/50">Your code</p>
-                <p dir="ltr" className="mt-1.5 truncate font-mono text-lg font-bold text-white">{code}</p>
-              </div>
-              <button
-                onClick={copyLink}
-                className="shrink-0 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10"
-              >
-                Copy link
-              </button>
-            </div>
+          <div className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-1.5">
+            <input
+              value={link}
+              readOnly
+              dir="ltr"
+              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 font-mono text-[12px] text-white/80 outline-none"
+            />
+            <button
+              onClick={copyLink}
+              className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-black transition hover:bg-white/90"
+            >
+              Copy
+            </button>
           </div>
         </section>
 
+        {/* Promoter banner — minimal, clean */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0c0e14]"
+        >
+          <div className="relative p-6 sm:p-7">
+            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-blue-500/20 blur-3xl" />
+            <div className="relative flex items-start gap-4">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/30 to-red-500/20">
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" className="h-5 w-5">
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/40">Partner Program</p>
+                <h3 className="mt-1.5 text-lg font-semibold tracking-tight">Become a top promoter</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/55">
+                  Up to <span className="text-white">50% commission</span>, a free subscription, and VIP perks.
+                </p>
+                <button
+                  onClick={openPromoter}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.08]"
+                >
+                  Apply via WhatsApp
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2" stroke="currentColor" className="h-3.5 w-3.5">
+                    <path d="M7 17L17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
         {/* Activity */}
         <section className="mt-10">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-display text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
-              Activity
-            </h3>
-          </div>
+          <h2 className="mb-4 text-sm font-semibold text-white/90">Activity</h2>
 
-          {/* segmented control */}
-          <div className="flex w-full rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+          <div className="flex w-full gap-1 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-1">
             {([
               ["referrals", "Referrals", refs.length],
               ["earnings", "Earnings", earns.length],
@@ -274,81 +228,91 @@ const ReferralsPage = () => {
               <button
                 key={k}
                 onClick={() => setTab(k)}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-semibold transition sm:text-sm ${
-                  tab === k ? "bg-white text-black" : "text-white/55 hover:text-white"
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition ${
+                  tab === k ? "bg-white/[0.08] text-white" : "text-white/45 hover:text-white/80"
                 }`}
               >
-                <span>{label}</span>
-                <span className={`rounded-full px-1.5 text-[10px] ${tab === k ? "bg-black/10 text-black/70" : "bg-white/10 text-white/50"}`}>
-                  {count}
-                </span>
+                {label}
+                <span className="text-[10px] text-white/35">{count}</span>
               </button>
             ))}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+          <div className="mt-3">
             {tab === "referrals" && (
               refs.length === 0 ? (
-                <div className="p-10 text-center">
-                  <p className="text-sm text-white/60">No referrals yet</p>
-                  <p className="mt-1 text-xs text-white/35">Share your link to start earning</p>
-                </div>
-              ) : refs.map((r, i) => (
-                <div key={r.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
-                  <p className="text-sm text-white/90">Friend #{i + 1}</p>
-                  <div className="flex items-center gap-3">
-                    <span className={`rounded-full border px-3 py-0.5 text-[11px] ${statusColor(r.status)}`}>
-                      {statusLabel(r.status)}
-                    </span>
-                    <span className="text-xs text-white/40">{fmtDate(r.created_at)}</span>
-                  </div>
-                </div>
-              ))
+                <EmptyState title="No referrals yet" hint="Share your link to start earning." />
+              ) : (
+                <ul className="divide-y divide-white/[0.05] rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                  {refs.map((r, i) => (
+                    <li key={r.id} className="flex items-center justify-between px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <span className={`h-2 w-2 rounded-full ${statusDot(r.status)}`} />
+                        <p className="text-sm">Friend #{i + 1}</p>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-white/45">
+                        <span>{statusLabel(r.status)}</span>
+                        <span>·</span>
+                        <span>{fmtDate(r.created_at)}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )
             )}
 
             {tab === "earnings" && (
               earns.length === 0 ? (
-                <div className="p-10 text-center">
-                  <p className="text-sm text-white/60">No earnings yet</p>
-                  <p className="mt-1 text-xs text-white/35">Commissions appear after a friend subscribes</p>
-                </div>
-              ) : earns.map((e, i) => (
-                <div key={e.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
-                  <div>
-                    <p className="text-sm font-medium text-white/90">{e.source_action}</p>
-                    <p className="text-xs text-white/40">{fmtDate(e.created_at)}</p>
-                  </div>
-                  <p className="bg-gradient-to-r from-[#3B82F6] to-[#EF4444] bg-clip-text text-lg font-black text-transparent">
-                    +${Number(e.amount).toFixed(2)}
-                  </p>
-                </div>
-              ))
+                <EmptyState title="No earnings yet" hint="Commissions appear after a friend subscribes." />
+              ) : (
+                <ul className="divide-y divide-white/[0.05] rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                  {earns.map((e) => (
+                    <li key={e.id} className="flex items-center justify-between px-4 py-3.5">
+                      <div>
+                        <p className="text-sm">{e.source_action}</p>
+                        <p className="text-xs text-white/40">{fmtDate(e.created_at)}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-emerald-400">
+                        +${Number(e.amount).toFixed(2)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )
             )}
 
             {tab === "withdrawals" && (
               wds.length === 0 ? (
-                <div className="p-10 text-center">
-                  <p className="text-sm text-white/60">No payouts yet</p>
-                  <p className="mt-1 text-xs text-white/35">Request a withdrawal once you reach $10</p>
-                </div>
-              ) : wds.map((w, i) => (
-                <div key={w.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
-                  <div>
-                    <p className="text-sm font-medium text-white/90">${Number(w.amount).toFixed(2)}</p>
-                    <p className="text-xs text-white/40">{w.method} · {fmtDate(w.created_at)}</p>
-                  </div>
-                  <span className={`rounded-full border px-3 py-0.5 text-[11px] ${statusColor(w.status)}`}>
-                    {statusLabel(w.status)}
-                  </span>
-                </div>
-              ))
+                <EmptyState title="No payouts yet" hint="Request a withdrawal once you reach $10." />
+              ) : (
+                <ul className="divide-y divide-white/[0.05] rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                  {wds.map((w) => (
+                    <li key={w.id} className="flex items-center justify-between px-4 py-3.5">
+                      <div>
+                        <p className="text-sm">${Number(w.amount).toFixed(2)}</p>
+                        <p className="text-xs text-white/40">{w.method} · {fmtDate(w.created_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-white/55">
+                        <span className={`h-1.5 w-1.5 rounded-full ${statusDot(w.status)}`} />
+                        {statusLabel(w.status)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )
             )}
           </div>
         </section>
-
       </main>
     </div>
   );
 };
+
+const EmptyState = ({ title, hint }: { title: string; hint: string }) => (
+  <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] px-6 py-12 text-center">
+    <p className="text-sm text-white/70">{title}</p>
+    <p className="mt-1 text-xs text-white/40">{hint}</p>
+  </div>
+);
 
 export default ReferralsPage;
