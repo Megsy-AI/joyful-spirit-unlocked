@@ -1,10 +1,11 @@
 // Workspace detail layout — Notion-style spacious settings.
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, Loader2, Menu } from "lucide-react";
+import { ArrowLeft, Loader2, Menu, Plus, AlertTriangle } from "lucide-react";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import WorkspaceSideNav from "@/components/workspace/WorkspaceSideNav";
 import PresenceBar from "@/components/workspace/PresenceBar";
+
 
 export default function WorkspaceDetailPage() {
   const { id } = useParams<{ id: string }>();
