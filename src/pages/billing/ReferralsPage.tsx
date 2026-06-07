@@ -195,51 +195,52 @@ const ReferralsPage = () => {
         >
           <div className="relative p-6 sm:p-7">
             <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-blue-500/20 blur-3xl" />
-            <div className="relative flex items-start gap-4">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/30 to-red-500/20">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" className="h-5 w-5">
-                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/40">Partner Program</p>
-                <h3 className="mt-1.5 text-lg font-semibold tracking-tight">Become a top promoter</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/55">
-                  Up to <span className="text-white">50% commission</span>, a free subscription, and VIP perks.
-                </p>
-                <button
-                  onClick={openPromoter}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.08]"
-                >
-                  Apply via WhatsApp
-                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.2" stroke="currentColor" className="h-3.5 w-3.5">
-                    <path d="M7 17L17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
+            <div className="relative">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/40">Partner Program</p>
+              <h3 className="mt-2 text-lg font-semibold tracking-tight">Become a top promoter</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/55">
+                Up to <span className="text-white">50% commission</span>, a free subscription, and VIP perks.
+              </p>
+              <button
+                onClick={openPromoter}
+                className="mt-4 inline-flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.08]"
+              >
+                Apply via WhatsApp
+              </button>
             </div>
           </div>
         </motion.section>
 
         {/* Activity */}
         <section className="mt-10">
-          <h2 className="mb-4 text-sm font-semibold text-white/90">Activity</h2>
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold text-white/90">Activity</h2>
+            <span className="text-[11px] text-white/40">
+              {tab === "referrals" ? refs.length : tab === "earnings" ? earns.length : wds.length} items
+            </span>
+          </div>
 
-          <div className="flex w-full gap-1 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-1">
+          <div className="relative flex w-full rounded-2xl bg-white/[0.04] p-1">
             {([
-              ["referrals", "Referrals", refs.length],
-              ["earnings", "Earnings", earns.length],
-              ["withdrawals", "Payouts", wds.length],
-            ] as const).map(([k, label, count]) => (
+              ["referrals", "Referrals"],
+              ["earnings", "Earnings"],
+              ["withdrawals", "Payouts"],
+            ] as const).map(([k, label]) => (
               <button
                 key={k}
                 onClick={() => setTab(k)}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition ${
-                  tab === k ? "bg-white/[0.08] text-white" : "text-white/45 hover:text-white/80"
-                }`}
+                className="relative flex-1 rounded-xl py-2.5 text-xs font-semibold transition"
               >
-                {label}
-                <span className="text-[10px] text-white/35">{count}</span>
+                {tab === k && (
+                  <motion.span
+                    layoutId="activeTab"
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                    className="absolute inset-0 rounded-xl bg-white shadow-lg shadow-black/30"
+                  />
+                )}
+                <span className={`relative ${tab === k ? "text-black" : "text-white/55"}`}>
+                  {label}
+                </span>
               </button>
             ))}
           </div>
