@@ -3981,10 +3981,11 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
                   {chatMenuView === "main" && (
                     <>
                       {[
-                        { icon: Plus, label: "New chat", onClick: handleNewChat, featured: false, keepOpen: false, view: null as null | "invite" | "rename" | "pin" },
+                        { icon: Plus, label: "New chat", onClick: handleNewChat, featured: false, keepOpen: false, view: null as null | "invite" | "share" | "rename" | "pin" },
                         { icon: UserPlus, label: "Invite people", onClick: async () => { setChatMenuView("invite"); if (!conversationId) { toast.error("Start a conversation first"); return; } setInviteLink(null); setInviteEmail(""); const user = await getCachedUser(); if (!user) return; const { data, error } = await supabase.from("conversation_invites").insert({ conversation_id: conversationId, invited_by: user.id } as any).select("invite_token").single(); if (!error && data) { setInviteLink(`${window.location.origin}/invite/${(data as any).invite_token}`); } }, keepOpen: true, view: "invite" as const },
+                        { icon: Share2, label: "Share", onClick: () => { setChatMenuView("share"); if (conversationId && !generatedShareUrl) { void handleCreateShareLink("public"); } }, keepOpen: true, view: "share" as const },
                         { icon: Pencil, label: "Rename", onClick: () => { setRenameValue(conversationTitle); setChatMenuView("rename"); }, keepOpen: true, view: "rename" as const },
-                        { icon: Pin, label: isPinned ? "Unpin chat" : "Pin chat", onClick: () => { void performTogglePin(); }, keepOpen: false, view: null as null | "invite" | "rename" | "pin" },
+                        { icon: Pin, label: isPinned ? "Unpin chat" : "Pin chat", onClick: () => { void performTogglePin(); }, keepOpen: false, view: null as null | "invite" | "share" | "rename" | "pin" },
                       ].map(({ icon: Icon, label, onClick, featured, keepOpen }) => (
                         <DropdownMenuItem
                           key={label}
