@@ -573,35 +573,8 @@ export default function MegsyPrHomePage() {
           </div>
 
 
-          {/* Platform selector — clean segmented control */}
-          <div className="mt-3 -mx-1 px-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-            {([
-              { id: "web", label: "Full-stack Web", Icon: Monitor },
-              { id: "ios", label: "iOS App", Icon: Smartphone },
-              { id: "android", label: "Android App", Icon: Smartphone },
-            ] as const).map(({ id, label, Icon }) => {
-              const active = platform === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setPlatform(id)}
-                  className={cn(
-                    "shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium transition-all border",
-                    active
-                      ? "bg-foreground text-background border-foreground shadow-sm"
-                      : "bg-foreground/[0.03] text-foreground/65 border-foreground/10 hover:text-foreground hover:bg-foreground/[0.06]"
-                  )}
-                >
-                  <Icon className="w-3.5 h-3.5" strokeWidth={1.9} />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Bottom controls */}
-          <div className="flex items-center justify-between mt-2 gap-2">
+          <div className="flex items-center justify-between mt-3 gap-2">
             <button
               onClick={() => { setPlusOpen((v) => !v); setActivePanel(null); }}
               className="w-9 h-9 rounded-full grid place-items-center hover:bg-foreground/5 transition md:w-10 md:h-10 md:rounded-2xl md:ios26-glass md:text-foreground/85 md:hover:text-foreground shrink-0"
@@ -612,6 +585,65 @@ export default function MegsyPrHomePage() {
 
             <div className="flex-1" />
 
+            {/* Platform picker — compact button + popover */}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setPlatformPickerOpen((v) => !v)}
+                className="h-9 md:h-10 px-3 rounded-full inline-flex items-center gap-1.5 border border-foreground/10 bg-foreground/[0.03] hover:bg-foreground/[0.06] text-[12px] font-medium text-foreground/85 transition"
+                aria-label="Select platform"
+              >
+                {platform === "ios" ? <Smartphone className="w-3.5 h-3.5" strokeWidth={1.9} /> : platform === "android" ? <Smartphone className="w-3.5 h-3.5" strokeWidth={1.9} /> : <Monitor className="w-3.5 h-3.5" strokeWidth={1.9} />}
+                <span className="truncate max-w-[90px]">
+                  {platform === "ios" ? "iOS" : platform === "android" ? "Android" : "Web"}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${platformPickerOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {platformPickerOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setPlatformPickerOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                      transition={{ duration: 0.16, ease: "easeOut" }}
+                      className="absolute top-full mt-2 right-0 z-40 w-52 rounded-2xl border border-foreground/10 overflow-hidden p-1.5"
+                      style={{
+                        background: "hsl(var(--card) / 0.95)",
+                        backdropFilter: "blur(24px) saturate(180%)",
+                        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                        boxShadow: "0 12px 36px -10px rgba(0,0,0,0.18)",
+                      }}
+                    >
+                      {([
+                        { id: "web",     label: "Full-stack Web", desc: "React · Vite · Supabase", Icon: Monitor },
+                        { id: "ios",     label: "iOS App",         desc: "SwiftUI-style preview",   Icon: Smartphone },
+                        { id: "android", label: "Android App",     desc: "Material You preview",    Icon: Smartphone },
+                      ] as const).map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => { setPlatform(p.id); setPlatformPickerOpen(false); }}
+                          className={`w-full text-left px-3 py-2 rounded-xl transition flex items-start gap-2 ${
+                            platform === p.id ? "bg-foreground/[0.06]" : "hover:bg-foreground/[0.04]"
+                          }`}
+                        >
+                          <p.Icon className="w-4 h-4 mt-0.5 text-foreground/70 shrink-0" strokeWidth={1.9} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-foreground truncate">{p.label}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{p.desc}</p>
+                          </div>
+                          {platform === p.id && <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Model picker — compact button + popover */}
             <div className="relative shrink-0">
               <button
@@ -621,7 +653,7 @@ export default function MegsyPrHomePage() {
                 aria-label="Select model"
               >
                 <span className="truncate max-w-[110px]">
-                  {selectedModel === "sonnet" ? "Sonnet 4.6" : selectedModel === "opus" ? "Opus 4.8" : "Default"}
+                  {selectedModel === "sonnet" ? "Sonnet 4.6" : selectedModel === "opus" ? "Opus 4.8" : "Megsy"}
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${modelPickerOpen ? "rotate-180" : ""}`} />
               </button>
@@ -646,7 +678,7 @@ export default function MegsyPrHomePage() {
                       {[
                         { id: "sonnet", label: "Claude Sonnet 4.6", desc: "Fast · balanced" },
                         { id: "opus",   label: "Claude Opus 4.8",   desc: "Most capable" },
-                        { id: "megsy",  label: "Default",           desc: "Default · tuned" },
+                        { id: "megsy",  label: "Megsy",             desc: "Default · tuned" },
                       ].map((m) => (
                         <button
                           key={m.id}
@@ -668,6 +700,7 @@ export default function MegsyPrHomePage() {
                 )}
               </AnimatePresence>
             </div>
+
 
             <button
               onClick={startNew}
