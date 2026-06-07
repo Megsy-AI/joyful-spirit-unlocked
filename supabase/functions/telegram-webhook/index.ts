@@ -439,6 +439,9 @@ async function handleAdminNotify(req: Request): Promise<Response> {
       ].join("\n");
       await tg("sendMessage", { chat_id: ADMIN_CHAT_ID, text: msg, parse_mode: "HTML", disable_web_page_preview: true });
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
 
     if (action === "payment_method_request") {
       const text = [
