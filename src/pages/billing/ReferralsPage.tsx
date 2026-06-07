@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import cairoTowerNile from "@/assets/cairo-tower-nile.jpg";
 
 const WHATSAPP_PHONE = "201098821812";
 const PROMOTER_MESSAGE =
