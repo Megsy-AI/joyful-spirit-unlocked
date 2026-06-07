@@ -572,6 +572,33 @@ export default function MegsyPrHomePage() {
           </div>
 
 
+          {/* Platform selector — clean segmented control */}
+          <div className="mt-3 -mx-1 px-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            {([
+              { id: "web", label: "Full-stack Web", Icon: Monitor },
+              { id: "ios", label: "iOS App", Icon: Smartphone },
+              { id: "android", label: "Android App", Icon: Smartphone },
+            ] as const).map(({ id, label, Icon }) => {
+              const active = platform === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPlatform(id)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium transition-all border",
+                    active
+                      ? "bg-foreground text-background border-foreground shadow-sm"
+                      : "bg-foreground/[0.03] text-foreground/65 border-foreground/10 hover:text-foreground hover:bg-foreground/[0.06]"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" strokeWidth={1.9} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Bottom controls */}
           <div className="flex items-center justify-between mt-2 gap-2">
             <button
