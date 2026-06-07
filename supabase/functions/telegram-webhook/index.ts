@@ -441,6 +441,13 @@ async function handleAdminNotify(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+
+
+
+
+
+
+
     if (action === "stats") {
       const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -496,6 +503,139 @@ async function handleAdminNotify(req: Request): Promise<Response> {
   }
 }
 
+// ---- user-facing flow (payment methods + withdrawals) ----
+const MIN_WITHDRAWAL = 10;
+const WITHDRAWALS_PER_MONTH = 2;
+
+async function handleUserFlow(req: Request): Promise<Response> {
+  const jsonHead = { ...corsHeaders, "Content-Type": "application/json" };
+  const j = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: jsonHead });
+
+  const auth = req.headers.get("Authorization") ?? "";
+  if (!auth.startsWith("Bearer ")) return j({ error: "unauthorized" }, 401);
+
+  const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const userClient = createClient(SUPABASE_URL, anon, {
+    global: { headers: { Authorization: auth } },
+  });
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return j({ error: "unauthorized" }, 401);
+
+  let body: any; try { body = await req.json(); } catch { return j({ error: "bad_json" }, 400); }
+  const op = String(body.op ?? "");
+
+  const { data: prof } = await db.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+  const userLabel = prof?.display_name || user.email || user.id.slice(0, 8);
+
+  try {
+    if (op === "submit_method") {
+      const method_type = body.method_type === "bank" ? "bank" : "custom";
+      const label = String(body.label ?? "").trim().slice(0, 80);
+      const instructions = String(body.instructions ?? "").trim().slice(0, 2000);
+      if (!label || !instructions) return j({ error: "label_and_instructions_required" }, 400);
+
+      const { data: inserted, error } = await db
+        .from("user_payment_methods")
+        .insert({ user_id: user.id, method_type, label, instructions, status: "pending" })
+        .select("id").single();
+      if (error) return j({ error: error.message }, 500);
+
+      const text = [
+        "💳 <b>طلب إضافة طريقة دفع</b>",
+        "",
+        `👤 <b>المستخدم:</b> ${userLabel}`,
+        `🆔 <code>${user.id}</code>`,
+        `🏷️ <b>النوع:</b> ${method_type === "bank" ? "حساب بنكي" : "مخصصة"}`,
+        `📛 <b>الاسم:</b> ${label}`,
+        "",
+        "📝 <b>التفاصيل:</b>",
+        `<code>${instructions.slice(0, 1500)}</code>`,
+      ].join("\n");
+      const sent: any = await tg("sendMessage", {
+        chat_id: ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: [[
+          { text: "✅ موافقة", callback_data: `pm:ok:${inserted.id}` },
+          { text: "❌ رفض", callback_data: `pm:no:${inserted.id}` },
+        ]] },
+      });
+      const msgId = sent?.result?.message_id;
+      if (msgId) await db.from("user_payment_methods").update({ telegram_message_id: msgId }).eq("id", inserted.id);
+      return j({ ok: true, id: inserted.id });
+    }
+
+    if (op === "submit_withdrawal") {
+      const payment_method_id = String(body.payment_method_id ?? "");
+      const payment_address = String(body.payment_address ?? "").trim().slice(0, 500);
+      const amount = parseFloat(String(body.amount ?? "0"));
+
+      if (!payment_method_id) return j({ error: "method_required" }, 400);
+      if (!payment_address) return j({ error: "address_required" }, 400);
+      if (!Number.isFinite(amount) || amount < MIN_WITHDRAWAL) return j({ error: `min_${MIN_WITHDRAWAL}` }, 400);
+
+      const { data: method } = await db.from("user_payment_methods")
+        .select("id, label, status, method_type")
+        .eq("id", payment_method_id).eq("user_id", user.id).maybeSingle();
+      if (!method || method.status !== "approved") return j({ error: "method_not_approved" }, 400);
+
+      const monthStart = new Date();
+      monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
+      const { count: usedThisMonth } = await db
+        .from("withdrawal_requests").select("*", { count: "exact", head: true })
+        .eq("user_id", user.id).neq("status", "rejected")
+        .gte("created_at", monthStart.toISOString());
+      if ((usedThisMonth ?? 0) >= WITHDRAWALS_PER_MONTH) {
+        return j({ error: "monthly_limit_reached", limit: WITHDRAWALS_PER_MONTH }, 400);
+      }
+
+      const [{ data: earns }, { data: wds }] = await Promise.all([
+        db.from("referral_earnings").select("amount").eq("referrer_id", user.id),
+        db.from("withdrawal_requests").select("amount, status").eq("user_id", user.id),
+      ]);
+      const totalEarned = (earns ?? []).reduce((s: number, r: any) => s + Number(r.amount), 0);
+      const totalCommitted = (wds ?? []).filter((w: any) => w.status !== "rejected")
+        .reduce((s: number, r: any) => s + Number(r.amount), 0);
+      const available = totalEarned - totalCommitted;
+      if (amount > available) return j({ error: "insufficient_balance", available }, 400);
+
+      const { data: reqRow, error } = await db
+        .from("withdrawal_requests")
+        .insert({
+          user_id: user.id, amount, method: method.method_type,
+          payment_details: method.label, payment_method_id, payment_address, status: "pending",
+        })
+        .select("id").single();
+      if (error) return j({ error: error.message }, 500);
+
+      const text = [
+        "💸 <b>طلب سحب جديد</b>",
+        "",
+        `👤 <b>المستخدم:</b> ${userLabel}`,
+        `🆔 <code>${user.id}</code>`,
+        `💵 <b>المبلغ:</b> $${amount.toFixed(2)}`,
+        `🏦 <b>الطريقة:</b> ${method.label} (${method.method_type})`,
+        "",
+        "📍 <b>عنوان الاستلام:</b>",
+        `<code>${payment_address.slice(0, 1000)}</code>`,
+      ].join("\n");
+      const sent: any = await tg("sendMessage", {
+        chat_id: ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: [[
+          { text: "✅ تم الدفع", callback_data: `wd:ok:${reqRow.id}` },
+          { text: "❌ رفض", callback_data: `wd:no:${reqRow.id}` },
+        ]] },
+      });
+      const msgId = sent?.result?.message_id;
+      if (msgId) await db.from("withdrawal_requests").update({ telegram_message_id: msgId }).eq("id", reqRow.id);
+      return j({ ok: true, id: reqRow.id });
+    }
+
+    return j({ error: "unknown_op" }, 400);
+  } catch (e) {
+    console.error("user-flow error", e);
+    return j({ error: (e as Error).message }, 500);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -505,6 +645,13 @@ Deno.serve(async (req) => {
   if (safeEqual(req.headers.get("X-Internal-Secret"), INTERNAL_SECRET)) {
     return await handleAdminNotify(req);
   }
+
+  // User-facing flow (payment methods + withdrawal requests)
+  if (req.headers.get("X-User-Flow") === "1") {
+    return await handleUserFlow(req);
+  }
+
+
 
   let update: any;
   try { update = await req.json(); } catch { return new Response("bad json", { status: 400 }); }
@@ -516,6 +663,70 @@ Deno.serve(async (req) => {
     const cb_chat_id = cq.message?.chat?.id as number;
     const cb_data = String(cq.data ?? "");
     try { await tg("answerCallbackQuery", { callback_query_id: cq.id }); } catch { /* ignore */ }
+
+    // ---- payment method / withdrawal approval (admin only) ----
+    if (cb_chat_id && (cb_data.startsWith("pm:") || cb_data.startsWith("wd:"))) {
+      if (!(await isAdmin(cb_chat_id))) {
+        await reply(cb_chat_id, "⛔ Admins only.");
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+      const [kind, action, id] = cb_data.split(":");
+      const approved = action === "ok";
+
+      if (kind === "pm" && id) {
+        const newStatus = approved ? "approved" : "rejected";
+        const { data: row } = await db.from("user_payment_methods")
+          .update({ status: newStatus }).eq("id", id).select("user_id, label").maybeSingle();
+        if (row) {
+          await db.from("notifications").insert({
+            user_id: row.user_id,
+            type: "payment_method",
+            title: approved ? "تمت الموافقة على طريقة الدفع" : "تم رفض طريقة الدفع",
+            message: approved
+              ? `تمت الموافقة على "${row.label}". يمكنك الآن استخدامها للسحب.`
+              : `تم رفض طريقة الدفع "${row.label}". راسلنا للمزيد.`,
+            metadata: { method_id: id, status: newStatus },
+          });
+        }
+        try {
+          await tg("editMessageReplyMarkup", {
+            chat_id: cb_chat_id,
+            message_id: cq.message?.message_id,
+            reply_markup: { inline_keyboard: [[{ text: approved ? "✅ تمت الموافقة" : "❌ مرفوض", callback_data: "noop" }]] },
+          });
+        } catch { /* ignore */ }
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+
+      if (kind === "wd" && id) {
+        const newStatus = approved ? "paid" : "rejected";
+        const { data: row } = await db.from("withdrawal_requests")
+          .update({ status: newStatus, processed_at: new Date().toISOString() })
+          .eq("id", id).select("user_id, amount").maybeSingle();
+        if (row) {
+          await db.from("notifications").insert({
+            user_id: row.user_id,
+            type: "withdrawal",
+            title: approved ? "تم تنفيذ السحب" : "تم رفض طلب السحب",
+            message: approved
+              ? `تم إرسال $${Number(row.amount).toFixed(2)} إلى طريقة الدفع الخاصة بك.`
+              : `تم رفض طلب سحب بقيمة $${Number(row.amount).toFixed(2)}.`,
+            metadata: { withdrawal_id: id, status: newStatus },
+          });
+        }
+        try {
+          await tg("editMessageReplyMarkup", {
+            chat_id: cb_chat_id,
+            message_id: cq.message?.message_id,
+            reply_markup: { inline_keyboard: [[{ text: approved ? "✅ مدفوع" : "❌ مرفوض", callback_data: "noop" }]] },
+          });
+        } catch { /* ignore */ }
+        return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers: corsHeaders });
+    }
+
+
 
     // ---- menu navigation ----
     if (cb_chat_id && (cb_data === "menu:main" || cb_data.startsWith("cat:") || cb_data.startsWith("svc:") || cb_data.startsWith("delkey:") || cb_data.startsWith("addkey:") || cb_data === "gallery:help" || cb_data.startsWith("tooltpl:") || cb_data.startsWith("landing:") || cb_data === "codeprompt:add")) {
