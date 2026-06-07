@@ -272,7 +272,7 @@ const InternalLinkInterceptor = () => {
       if (nextPath === currentPath) return;
 
       event.preventDefault();
-      navigate(nextPath);
+      startTransition(() => navigate(nextPath));
     };
 
     document.addEventListener("click", onClick);
