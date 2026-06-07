@@ -276,7 +276,11 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
       strong: ({ children }) => <strong><BidiText>{children}</BidiText></strong>,
       em: ({ children }) => <em><BidiText>{children}</BidiText></em>,
       a: ({ href, children }) => (
-        <a href={href} onClick={(e) => href && onLinkClick(e, href)} className="text-primary underline underline-offset-2 cursor-pointer hover:opacity-80">
+        <a
+          href={href}
+          onClick={(e) => href && onLinkClick(e, href)}
+          className="text-indigo-400 underline decoration-indigo-400/30 underline-offset-4 hover:decoration-indigo-400 transition-all cursor-pointer"
+        >
           {children}
         </a>
       ),
@@ -286,8 +290,6 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
         const codeStr = String(children).replace(/\n$/, "");
         const isBlock = className?.startsWith("language-");
 
-        // Hide data-only fenced blocks consumed by upstream parsers
-        // (learn-mode cards, mermaid, etc.). They have no value to the reader.
         if (isBlock && lang && ["learn", "learn_card", "cards", "json"].includes(lang)) {
           return null;
         }
@@ -304,32 +306,48 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
           );
         }
 
-        return <code className="px-[0.35em] py-[0.15em] rounded-md bg-muted text-[0.875em] font-mono text-foreground" {...props}>{children}</code>;
+        return (
+          <code
+            className="px-1.5 py-0.5 rounded bg-foreground/[0.08] text-indigo-300 text-[0.85em] font-mono"
+            {...props}
+          >
+            {children}
+          </code>
+        );
       },
       pre: ({ children }) => <>{children}</>,
       blockquote: ({ children }) => (
-        <blockquote className="my-4 border-s-2 border-border ps-4 text-foreground/80 italic">{children}</blockquote>
+        <blockquote className="my-4 py-1 ps-4 border-s-2 border-indigo-500/50 italic text-foreground/70">
+          {children}
+        </blockquote>
       ),
-      hr: () => <hr className="my-6 border-0 border-t border-border" />,
+      hr: () => <hr className="my-6 border-0 border-t border-border/60" />,
+      ul: ({ children }) => <ul className="my-3 space-y-2 ps-1 list-none [&_li]:flex [&_li]:gap-3 [&_li]:before:content-['•'] [&_li]:before:text-indigo-500 [&_li]:before:shrink-0">{children}</ul>,
+      ol: ({ children }) => <ol className="my-3 space-y-2 ps-6 list-decimal marker:text-indigo-500/80 marker:font-semibold">{children}</ol>,
       table: ({ children }) => (
-        <div className="my-5 max-w-full overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full border-collapse text-start text-[13px] tabular-nums">{children}</table>
+        <div
+          className="my-5 max-w-full overflow-x-auto rounded-xl overflow-hidden"
+          style={{ boxShadow: "inset 0 0 0 1px hsl(var(--foreground) / 0.1)" }}
+        >
+          <table className="w-full border-collapse text-start text-[13px]">{children}</table>
         </div>
       ),
       thead: ({ children }) => (
-        <thead className="bg-muted/40 border-b border-border">{children}</thead>
+        <thead className="bg-foreground/[0.05]">{children}</thead>
       ),
-      tbody: ({ children }) => <tbody className="divide-y divide-border/60">{children}</tbody>,
+      tbody: ({ children }) => (
+        <tbody className="divide-y divide-foreground/[0.06]">{children}</tbody>
+      ),
       tr: ({ children }) => (
-        <tr className="transition-colors hover:bg-muted/30">{children}</tr>
+        <tr className="transition-colors hover:bg-foreground/[0.025]">{children}</tr>
       ),
       th: ({ children }) => (
-        <th className="px-4 py-2.5 text-start text-[12px] font-semibold text-foreground whitespace-nowrap">
+        <th className="px-4 py-3 text-start text-[12.5px] font-semibold text-foreground whitespace-nowrap">
           {children}
         </th>
       ),
       td: ({ children }) => (
-        <td className="px-4 py-2.5 text-[13px] text-foreground/85 leading-[1.6] align-top [&>br]:block [&_code]:text-[12px]">
+        <td className="px-4 py-3 text-[13px] text-foreground/80 leading-[1.6] align-top [&>br]:block">
           {children}
         </td>
       ),

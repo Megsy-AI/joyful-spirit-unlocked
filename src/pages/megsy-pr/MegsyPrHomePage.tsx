@@ -104,7 +104,8 @@ export default function MegsyPrHomePage() {
   const [phText, setPhText] = useState("");
   useEffect(() => {
     if (input) return;
-    const target = ROTATING_PROMPTS[phIdx];
+    const target = ROTATING_PROMPTS[phIdx] ?? "";
+    if (!target) return;
     let i = 0;
     setPhText("");
     const typer = setInterval(() => {

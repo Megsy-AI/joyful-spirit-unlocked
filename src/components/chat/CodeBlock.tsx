@@ -53,24 +53,24 @@ export default function CodeBlock({ code, lang, className, onPreview }: Props) {
 
   return (
     <div
-      className="my-3 rounded-xl overflow-hidden border"
+      className="my-3 rounded-2xl overflow-hidden shadow-2xl"
       style={{
-        backgroundColor: "hsl(var(--card))",
-        borderColor: "hsl(var(--border))",
+        backgroundColor: "hsl(var(--card) / 0.4)",
+        boxShadow: "inset 0 0 0 1px hsl(var(--foreground) / 0.1), 0 20px 40px -20px hsl(0 0% 0% / 0.6)",
       }}
       dir="ltr"
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-3 h-9 border-b"
+        className="flex items-center justify-between px-4 h-10 border-b"
         style={{
-          backgroundColor: "hsl(var(--muted) / 0.4)",
-          borderColor: "hsl(var(--border))",
+          backgroundColor: "hsl(var(--foreground) / 0.05)",
+          borderColor: "hsl(var(--foreground) / 0.06)",
         }}
       >
         <div className="flex items-center gap-2 min-w-0">
           <FileCode2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
+          <span className="text-[11px] font-medium tracking-tight uppercase text-muted-foreground truncate">
             {label}
           </span>
         </div>
@@ -79,7 +79,7 @@ export default function CodeBlock({ code, lang, className, onPreview }: Props) {
             <button
               type="button"
               onClick={() => onPreview(code, lang)}
-              className="text-[11px] px-2 h-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+              className="text-[11px] px-2 h-6 rounded-md text-muted-foreground hover:text-foreground transition-colors"
             >
               Preview
             </button>
@@ -87,7 +87,7 @@ export default function CodeBlock({ code, lang, className, onPreview }: Props) {
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1 text-[11px] px-2 h-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] px-2 h-6 rounded-md text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Copy code"
           >
             {copied ? (
@@ -108,10 +108,11 @@ export default function CodeBlock({ code, lang, className, onPreview }: Props) {
         className="overflow-x-auto"
         style={{ maxHeight: tooLong ? "440px" : undefined, overflowY: tooLong ? "auto" : undefined }}
       >
-        <pre className="m-0 p-3.5 text-[12.5px] leading-[1.65] font-mono text-foreground/90">
+        <pre className="m-0 p-4 text-[13px] leading-6 font-mono text-indigo-300/90">
           <code className={className}>{code}</code>
         </pre>
       </div>
     </div>
   );
 }
+
