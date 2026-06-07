@@ -312,35 +312,24 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
       ),
       hr: () => <hr className="my-6 border-0 border-t border-border" />,
       table: ({ children }) => (
-        <div
-          className="my-5 max-w-full overflow-x-auto rounded-2xl border border-border/60"
-          style={{
-            background: "linear-gradient(180deg, hsl(var(--card) / 0.6), hsl(var(--card) / 0.3))",
-            boxShadow: "0 1px 0 hsl(var(--foreground) / 0.04) inset, 0 8px 24px -16px hsl(var(--foreground) / 0.18)",
-          }}
-        >
-          <table className="w-full border-collapse text-start text-[13.5px]">{children}</table>
+        <div className="my-5 max-w-full overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full border-collapse text-start text-[13px] tabular-nums">{children}</table>
         </div>
       ),
       thead: ({ children }) => (
-        <thead
-          className="border-b border-border/60"
-          style={{ background: "linear-gradient(180deg, hsl(var(--muted) / 0.7), hsl(var(--muted) / 0.35))" }}
-        >
-          {children}
-        </thead>
+        <thead className="bg-muted/40 border-b border-border">{children}</thead>
       ),
-      tbody: ({ children }) => <tbody>{children}</tbody>,
+      tbody: ({ children }) => <tbody className="divide-y divide-border/60">{children}</tbody>,
       tr: ({ children }) => (
-        <tr className="border-b border-border/40 last:border-0 transition-colors hover:bg-foreground/[0.03] [tbody_&:nth-child(even)]:bg-foreground/[0.015]">{children}</tr>
+        <tr className="transition-colors hover:bg-muted/30">{children}</tr>
       ),
       th: ({ children }) => (
-        <th className="px-4 py-3 text-start text-[11.5px] font-semibold text-foreground/70 uppercase tracking-[0.06em] whitespace-nowrap">
+        <th className="px-4 py-2.5 text-start text-[12px] font-semibold text-foreground whitespace-nowrap">
           {children}
         </th>
       ),
       td: ({ children }) => (
-        <td className="px-4 py-3.5 text-[13.5px] text-foreground/90 leading-[1.7] align-top [&>br]:block">
+        <td className="px-4 py-2.5 text-[13px] text-foreground/85 leading-[1.6] align-top [&>br]:block [&_code]:text-[12px]">
           {children}
         </td>
       ),
