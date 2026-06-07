@@ -1,0 +1,9 @@
+project_id = "ltgampdtawuefwwayncx"
+
+[functions.verify-subscription]
+verify_jwt = false
+
+[functions.telegram-webhook]
+verify_jwt = false
+[functions.admin-add-prompt]
+verify_jwt = false

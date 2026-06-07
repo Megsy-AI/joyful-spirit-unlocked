@@ -1,0 +1,1 @@
+ALTER TABLE public.code_prompts ALTER COLUMN created_by DROP NOT NULL;
