@@ -325,10 +325,7 @@ const MarkdownRenderer = ({ content, onLinkClick, onPreviewCode }: {
       ul: ({ children }) => <ul className="my-3 space-y-2 ps-1 list-none [&_li]:flex [&_li]:gap-3 [&_li]:before:content-['•'] [&_li]:before:text-indigo-500 [&_li]:before:shrink-0">{children}</ul>,
       ol: ({ children }) => <ol className="my-3 space-y-2 ps-6 list-decimal marker:text-indigo-500/80 marker:font-semibold">{children}</ol>,
       table: ({ children }) => (
-        <div
-          className="my-5 max-w-full overflow-x-auto rounded-xl overflow-hidden"
-          style={{ boxShadow: "inset 0 0 0 1px hsl(var(--foreground) / 0.1)" }}
-        >
+        <div className="my-5 max-w-full overflow-x-auto rounded-xl border border-foreground/10">
           <table className="w-full border-collapse text-start text-[13px]">{children}</table>
         </div>
       ),
