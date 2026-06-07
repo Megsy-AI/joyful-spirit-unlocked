@@ -898,15 +898,17 @@ html, body { background-color: hsl(var(--background)); color: hsl(var(--foregrou
 .prose-chat blockquote p:last-child { margin-bottom: 0; }
 .prose-chat img { border-radius: 10px; max-width: 100%; margin: 0.6em 0; border: 1px solid hsl(var(--border) / 0.5); }
 .prose-chat table {
-  width: 100%; border-collapse: separate; border-spacing: 0;
-  margin: 0.9em 0; font-size: 0.9em;
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px; overflow: hidden;
+  width: 100%; border-collapse: collapse; border-spacing: 0;
+  margin: 0; font-size: 0.9em;
+  border: 0;
+  border-radius: 0; overflow: visible;
 }
 .prose-chat th { background: hsl(var(--muted) / 0.5); padding: 0.55em 0.85em; text-align: left; font-weight: 600; font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.04em; color: hsl(var(--foreground) / 0.7); border-bottom: 1px solid hsl(var(--border)); }
 .prose-chat td { padding: 0.6em 0.85em; border-bottom: 1px solid hsl(var(--border) / 0.4); color: hsl(var(--foreground) / 0.9); }
 .prose-chat tr:last-child td { border-bottom: none; }
 .prose-chat tr:nth-child(even) td { background: hsl(var(--muted) / 0.2); }
+.prose-chat .chat-markdown-table-shell { scrollbar-width: thin; scrollbar-color: hsl(var(--foreground) / 0.18) transparent; }
+.prose-chat .chat-markdown-table { margin: 0; border: 0; border-radius: 0; overflow: visible; }
 
 /* RTL — flip list indent / blockquote border so Arabic reads cleanly */
 .prose-chat[dir="rtl"] ul, .prose-chat[dir="rtl"] ol { padding-left: 0; padding-right: 1.5em; }
