@@ -7,7 +7,7 @@ import referralBanner from "@/assets/referral-banner.webp";
 
 const WHATSAPP_PHONE = "201098821812";
 const PROMOTER_MESSAGE =
-  "مرحباً، أريد الانضمام إلى نظام الترويج / الإحالة الخاص بـ Megsy AI. أرجو إرسال التفاصيل.";
+  "Hello, I want to join the Megsy AI promotion / referral system. Please send me the details.";
 
 interface Referral { id: string; status: string; created_at: string; }
 interface Earning { id: string; amount: number; source_action: string; created_at: string; }
@@ -17,7 +17,7 @@ const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 const statusLabel = (s: string) =>
-  ({ approved: "موافق", pending: "قيد المراجعة", rejected: "مرفوض", paid: "تم الدفع", active: "نشط" } as Record<string, string>)[s] ?? s;
+  ({ approved: "Approved", pending: "Pending", rejected: "Rejected", paid: "Paid", active: "Active" } as Record<string, string>)[s] ?? s;
 
 const statusColor = (s: string) => {
   if (s === "approved" || s === "paid" || s === "active") return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
@@ -67,7 +67,7 @@ const ReferralsPage = () => {
   const copyLink = async () => {
     if (!link) return;
     await navigator.clipboard.writeText(link);
-    toast.success("تم نسخ الرابط");
+    toast.success("Link copied");
   };
 
   const openPromoter = () => {
@@ -76,23 +76,23 @@ const ReferralsPage = () => {
   };
 
   const stats = [
-    { label: "الإحالات", value: signups.toString() },
-    { label: "إجمالي الأرباح", value: `$${totalEarned.toFixed(2)}` },
-    { label: "الرصيد المتاح", value: `$${available.toFixed(2)}` },
-    { label: "السحوبات", value: wds.length.toString() },
+    { label: "Referrals", value: signups.toString() },
+    { label: "Total Earnings", value: `$${totalEarned.toFixed(2)}` },
+    { label: "Available", value: `$${available.toFixed(2)}` },
+    { label: "Withdrawals", value: wds.length.toString() },
   ];
 
   return (
-    <div data-theme="dark" dir="rtl" className="min-h-[100dvh] bg-background text-foreground">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-background/70 px-4 py-3 backdrop-blur-xl md:px-8">
-        <button onClick={() => navigate(-1)} className="text-sm text-white/60 hover:text-white transition">
-          ← رجوع
-        </button>
-        <p className="text-xs uppercase tracking-[0.25em] text-white/40">Megsy Affiliate</p>
-      </header>
+    <div data-theme="dark" dir="ltr" className="min-h-[100dvh] bg-background text-foreground">
+      {/* Floating back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed left-4 top-4 z-50 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white/80 shadow-lg backdrop-blur-xl transition hover:bg-white/[0.12] hover:text-white"
+      >
+        Back
+      </button>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8 pt-16">
         {/* Cinematic hero */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -108,15 +108,15 @@ const ReferralsPage = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/85" />
           <div className="relative z-10 px-6 py-16 text-center md:px-12 md:py-28">
             <span className="inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-white/80 backdrop-blur">
-              برنامج الإحالة
+              Megsy Affiliate
             </span>
             <h1 className="mt-6 font-display text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.95] text-white drop-shadow-2xl">
-              ادعُ. شارك.
+              Invite. Share.
               <br />
-              <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">اكسب مدى الحياة.</span>
+              <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">Earn for life.</span>
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-sm leading-relaxed text-white/85 md:text-lg">
-              عمولة 20% على كل اشتراك يقوم به أصدقاؤك — تتجدد شهرياً طالما بقوا معنا.
+              20% commission on every subscription your friends make — renews monthly as long as they stay with us.
             </p>
 
             <div className="mx-auto mt-8 flex max-w-xl flex-col gap-2 rounded-2xl border border-white/15 bg-black/40 p-2 backdrop-blur sm:flex-row">
@@ -130,7 +130,7 @@ const ReferralsPage = () => {
                 onClick={copyLink}
                 className="rounded-xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-6 py-3 text-sm font-bold text-black transition hover:opacity-90"
               >
-                نسخ الرابط
+                Copy Link
               </button>
             </div>
           </div>
@@ -166,19 +166,19 @@ const ReferralsPage = () => {
           <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#FFD700]/15 blur-3xl" />
           <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-[#FFD700]">شراكة رسمية</span>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#FFD700]">Official Partnership</span>
               <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight text-white md:text-5xl">
-                كن مروّجاً <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">رسمياً</span>
+                Become an <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">Official Promoter</span>
               </h2>
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/70 md:text-base">
-                عمولة تصل إلى 50% من الأرباح + اشتراك مجاني + مزايا حصرية. تواصل معنا الآن عبر واتساب وانضم إلى نخبة المروّجين.
+                Commission up to 50% of earnings + free subscription + exclusive perks. Contact us now via WhatsApp and join the elite promoters.
               </p>
             </div>
             <button
               onClick={openPromoter}
               className="self-start rounded-2xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-8 py-4 text-sm font-bold uppercase tracking-wider text-black shadow-2xl shadow-[#FFA500]/30 transition hover:scale-[1.02]"
             >
-              انضم عبر واتساب
+              Join via WhatsApp
             </button>
           </div>
         </motion.section>
@@ -186,23 +186,23 @@ const ReferralsPage = () => {
         {/* Withdraw CTA */}
         <section className="mt-10 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">جاهز للسحب</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Ready to withdraw</p>
             <p className="mt-3 font-display text-4xl font-black text-white">${available.toFixed(2)}</p>
             <button
               onClick={() => navigate("/settings/withdraw")}
               className="mt-5 w-full rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              سحب الأرباح
+              Withdraw Earnings
             </button>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">كود الإحالة الخاص بك</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Your referral code</p>
             <p dir="ltr" className="mt-3 font-mono text-2xl font-bold text-white">{code}</p>
             <button
               onClick={copyLink}
               className="mt-5 w-full rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              نسخ رابط الدعوة
+              Copy Invite Link
             </button>
           </div>
         </section>
@@ -211,9 +211,9 @@ const ReferralsPage = () => {
         <section className="mt-12">
           <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
             {([
-              ["referrals", "الإحالات"],
-              ["earnings", "الأرباح"],
-              ["withdrawals", "السحوبات"],
+              ["referrals", "Referrals"],
+              ["earnings", "Earnings"],
+              ["withdrawals", "Withdrawals"],
             ] as const).map(([k, label]) => (
               <button
                 key={k}
@@ -230,10 +230,10 @@ const ReferralsPage = () => {
           <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
             {tab === "referrals" && (
               refs.length === 0 ? (
-                <p className="p-10 text-center text-sm text-white/50">لا يوجد إحالات بعد.</p>
+                <p className="p-10 text-center text-sm text-white/50">No referrals yet.</p>
               ) : refs.map((r, i) => (
                 <div key={r.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
-                  <p className="text-sm text-white/90">صديق #{i + 1}</p>
+                  <p className="text-sm text-white/90">Friend #{i + 1}</p>
                   <div className="flex items-center gap-3">
                     <span className={`rounded-full border px-3 py-0.5 text-[11px] ${statusColor(r.status)}`}>
                       {statusLabel(r.status)}
@@ -246,7 +246,7 @@ const ReferralsPage = () => {
 
             {tab === "earnings" && (
               earns.length === 0 ? (
-                <p className="p-10 text-center text-sm text-white/50">لم تربح شيئاً بعد.</p>
+                <p className="p-10 text-center text-sm text-white/50">No earnings yet.</p>
               ) : earns.map((e, i) => (
                 <div key={e.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
                   <div>
@@ -262,7 +262,7 @@ const ReferralsPage = () => {
 
             {tab === "withdrawals" && (
               wds.length === 0 ? (
-                <p className="p-10 text-center text-sm text-white/50">لا يوجد طلبات سحب.</p>
+                <p className="p-10 text-center text-sm text-white/50">No withdrawal requests.</p>
               ) : wds.map((w, i) => (
                 <div key={w.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
                   <div>
