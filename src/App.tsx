@@ -355,29 +355,41 @@ const DodoReturnRedirect = () => {
   return null;
 };
 
+// Module-level auth cache so navigating between protected routes doesn't
+// flash a blank screen while ProtectedRoute remounts and re-checks session.
+let cachedAuthState: { authenticated: boolean; resolved: boolean } = {
+  authenticated: false,
+  resolved: false,
+};
+const authListeners = new Set<(s: { authenticated: boolean; resolved: boolean }) => void>();
+let authBootstrapped = false;
+
+const bootstrapAuth = () => {
+  if (authBootstrapped) return;
+  authBootstrapped = true;
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedAuthState = { authenticated: !!session, resolved: true };
+    authListeners.forEach((cb) => cb(cachedAuthState));
+  });
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    cachedAuthState = { authenticated: !!session, resolved: true };
+    authListeners.forEach((cb) => cb(cachedAuthState));
+  });
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+  bootstrapAuth();
+  const [state, setState] = useState(cachedAuthState);
 
   useEffect(() => {
-    let mounted = true;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) {
-        setAuthenticated(!!session);
-        setLoading(false);
-      }
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        setAuthenticated(!!session);
-        setLoading(false);
-      }
-    });
-    return () => { mounted = false; subscription.unsubscribe(); };
+    setState(cachedAuthState);
+    const cb = (s: typeof cachedAuthState) => setState(s);
+    authListeners.add(cb);
+    return () => { authListeners.delete(cb); };
   }, []);
 
-  if (loading) return <div className="h-screen bg-background" />;
-  if (!authenticated) return <Navigate to="/auth" replace />;
+  if (!state.resolved) return <div className="h-screen bg-background" />;
+  if (!state.authenticated) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 };
 
