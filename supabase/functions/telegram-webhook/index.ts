@@ -439,7 +439,60 @@ async function handleAdminNotify(req: Request): Promise<Response> {
       ].join("\n");
       await tg("sendMessage", { chat_id: ADMIN_CHAT_ID, text: msg, parse_mode: "HTML", disable_web_page_preview: true });
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    if (action === "payment_method_request") {
+      const text = [
+        "💳 <b>طلب إضافة طريقة دفع</b>",
+        "",
+        `👤 <b>المستخدم:</b> ${body.user_label ?? "—"}`,
+        `🆔 <code>${body.user_id ?? "—"}</code>`,
+        `🏷️ <b>النوع:</b> ${body.method_type === "bank" ? "حساب بنكي" : "مخصصة"}`,
+        `📛 <b>الاسم:</b> ${body.label ?? "—"}`,
+        "",
+        "📝 <b>التفاصيل:</b>",
+        `<code>${(body.instructions ?? "").toString().slice(0, 1500)}</code>`,
+      ].join("\n");
+      const sent: any = await tg("sendMessage", {
+        chat_id: ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: [[
+          { text: "✅ موافقة", callback_data: `pm:ok:${body.id}` },
+          { text: "❌ رفض", callback_data: `pm:no:${body.id}` },
+        ]] },
+      });
+      const msgId = sent?.result?.message_id;
+      if (msgId) {
+        await db.from("user_payment_methods").update({ telegram_message_id: msgId }).eq("id", body.id);
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    if (action === "withdrawal_request") {
+      const text = [
+        "💸 <b>طلب سحب جديد</b>",
+        "",
+        `👤 <b>المستخدم:</b> ${body.user_label ?? "—"}`,
+        `🆔 <code>${body.user_id ?? "—"}</code>`,
+        `💵 <b>المبلغ:</b> $${Number(body.amount ?? 0).toFixed(2)}`,
+        `🏦 <b>الطريقة:</b> ${body.method_label ?? "—"} (${body.method_type ?? "custom"})`,
+        "",
+        "📍 <b>عنوان الاستلام:</b>",
+        `<code>${(body.payment_address ?? "").toString().slice(0, 1000)}</code>`,
+      ].join("\n");
+      const sent: any = await tg("sendMessage", {
+        chat_id: ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: [[
+          { text: "✅ تم الدفع", callback_data: `wd:ok:${body.id}` },
+          { text: "❌ رفض", callback_data: `wd:no:${body.id}` },
+        ]] },
+      });
+      const msgId = sent?.result?.message_id;
+      if (msgId) {
+        await db.from("withdrawal_requests").update({ telegram_message_id: msgId }).eq("id", body.id);
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
 
     if (action === "stats") {
       const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
