@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUp, Plus, Loader2, Paperclip, Palette, Database, ChevronRight, ChevronDown, X,
-  Image as ImageIcon, FileText, Check, Code2, MessageSquare, Film
+  Image as ImageIcon, FileText, Check, Code2, MessageSquare, Film, Smartphone, Monitor
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -67,6 +67,11 @@ export default function MegsyPrHomePage() {
   const [greeting] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
 
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [platform, setPlatform] = useState<"web" | "ios" | "android">(() => {
+    if (typeof window !== "undefined") return (localStorage.getItem("megsy_pr_platform") as any) || "web";
+    return "web";
+  });
+  useEffect(() => { if (typeof window !== "undefined") localStorage.setItem("megsy_pr_platform", platform); }, [platform]);
   const [files, setFiles] = useState<AttachedFile[]>([]);
   const [linkedProject, setLinkedProject] = useState<{ ref: string; name: string } | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>(() => {
