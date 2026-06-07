@@ -314,6 +314,8 @@ export default function MegsyPrHomePage() {
 
       let fullPrompt = prompt;
       const hidden: string[] = [];
+      const platformLabel = platform === "ios" ? "iOS App (native-feel SwiftUI-style React Native preview)" : platform === "android" ? "Android App (Material You-style React Native preview)" : "Full-stack web app (React + Vite + Tailwind + Supabase)";
+      hidden.push(`[Target platform: ${platformLabel}]`);
       if (selectedTheme) {
         const t = DESIGN_THEMES.find((x) => x.id === selectedTheme);
         if (t) hidden.push(`[Design preference: ${t.name}]`);
