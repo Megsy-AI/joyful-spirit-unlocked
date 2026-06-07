@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { DesktopSettingsLayout } from "@/components/settings/DesktopSettingsLayout";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import referralBanner from "@/assets/referral-banner.webp";
 
 const WHATSAPP_PHONE = "201098821812";
 const PROMOTER_MESSAGE =
@@ -23,19 +16,22 @@ interface Withdrawal { id: string; amount: number; status: string; method: strin
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-const statusVariant = (s: string): "default" | "secondary" | "destructive" | "outline" => {
-  if (s === "approved" || s === "paid" || s === "active") return "default";
-  if (s === "rejected") return "destructive";
-  return "secondary";
+const statusLabel = (s: string) =>
+  ({ approved: "موافق", pending: "قيد المراجعة", rejected: "مرفوض", paid: "تم الدفع", active: "نشط" } as Record<string, string>)[s] ?? s;
+
+const statusColor = (s: string) => {
+  if (s === "approved" || s === "paid" || s === "active") return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+  if (s === "rejected") return "bg-red-500/15 text-red-300 border-red-500/30";
+  return "bg-white/5 text-white/70 border-white/15";
 };
 
 const ReferralsPage = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const [code, setCode] = useState("");
   const [refs, setRefs] = useState<Referral[]>([]);
   const [earns, setEarns] = useState<Earning[]>([]);
   const [wds, setWds] = useState<Withdrawal[]>([]);
+  const [tab, setTab] = useState<"referrals" | "earnings" | "withdrawals">("referrals");
 
   const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -79,154 +75,209 @@ const ReferralsPage = () => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const content = (
-    <div className="mx-auto w-full max-w-4xl space-y-6 pb-20">
-      {/* Hero */}
-      <Card>
-        <CardHeader className="space-y-3">
-          <Badge variant="secondary" className="w-fit">برنامج الإحالة</Badge>
-          <CardTitle className="text-3xl md:text-4xl font-semibold tracking-tight">
-            ادعُ أصدقاءك. اربح مدى الحياة.
-          </CardTitle>
-          <CardDescription className="text-base">
-            احصل على عمولة 15% من كل اشتراك يقوم به أصدقاؤك — تتجدد كل شهر طالما بقوا معنا.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-4 sm:flex-row sm:items-center">
-            <Input value={link} readOnly className="font-mono text-sm" />
-            <Button onClick={copyLink} className="shrink-0">نسخ الرابط</Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => navigate("/settings/withdraw")}>
-              سحب الأرباح
-            </Button>
-            <Button variant="outline" onClick={openPromoter}>
-              كن مروّجاً وكسب حتى 50% — تواصل عبر واتساب
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {[
-          { label: "إحالات", value: signups.toString() },
-          { label: "إجمالي الأرباح", value: `$${totalEarned.toFixed(2)}` },
-          { label: "الرصيد المتاح", value: `$${available.toFixed(2)}` },
-          { label: "طلبات السحب", value: wds.length.toString() },
-        ].map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">{s.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Promoter callout */}
-      <Card className="border-primary/40 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardContent className="flex flex-col items-start gap-3 p-6 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold">هل تريد أن تكون مروّجاً رسمياً؟</h3>
-            <p className="text-sm text-muted-foreground">
-              عمولة تصل إلى 50% من الأرباح + اشتراك مجاني + مزايا حصرية.
-            </p>
-          </div>
-          <Button onClick={openPromoter} size="lg">انضم الآن عبر واتساب</Button>
-        </CardContent>
-      </Card>
-
-      {/* Tabs */}
-      <Tabs defaultValue="referrals" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="referrals">الإحالات</TabsTrigger>
-          <TabsTrigger value="earnings">الأرباح</TabsTrigger>
-          <TabsTrigger value="withdrawals">السحوبات</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="referrals" className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              {refs.length === 0 ? (
-                <p className="p-10 text-center text-sm text-muted-foreground">لا يوجد إحالات بعد.</p>
-              ) : refs.map((r, i) => (
-                <div key={r.id}>
-                  <div className="flex items-center justify-between p-4">
-                    <p className="text-sm">صديق #{i + 1}</p>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={statusVariant(r.status)}>{r.status}</Badge>
-                      <span className="text-xs text-muted-foreground">{fmtDate(r.created_at)}</span>
-                    </div>
-                  </div>
-                  {i < refs.length - 1 && <Separator />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="earnings" className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              {earns.length === 0 ? (
-                <p className="p-10 text-center text-sm text-muted-foreground">لم تربح شيئاً بعد.</p>
-              ) : earns.map((e, i) => (
-                <div key={e.id}>
-                  <div className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="text-sm font-medium">{e.source_action}</p>
-                      <p className="text-xs text-muted-foreground">{fmtDate(e.created_at)}</p>
-                    </div>
-                    <p className="text-base font-semibold">+${Number(e.amount).toFixed(2)}</p>
-                  </div>
-                  {i < earns.length - 1 && <Separator />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="withdrawals" className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              {wds.length === 0 ? (
-                <p className="p-10 text-center text-sm text-muted-foreground">لا يوجد طلبات سحب.</p>
-              ) : wds.map((w, i) => (
-                <div key={w.id}>
-                  <div className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="text-sm font-medium">${Number(w.amount).toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">{w.method} · {fmtDate(w.created_at)}</p>
-                    </div>
-                    <Badge variant={statusVariant(w.status)}>{w.status}</Badge>
-                  </div>
-                  {i < wds.length - 1 && <Separator />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-
-  if (!isMobile) {
-    return (
-      <DesktopSettingsLayout title="الإحالات" subtitle="ادعُ أصدقاءك واربح عمولة مدى الحياة">
-        {content}
-      </DesktopSettingsLayout>
-    );
-  }
+  const stats = [
+    { label: "الإحالات", value: signups.toString() },
+    { label: "إجمالي الأرباح", value: `$${totalEarned.toFixed(2)}` },
+    { label: "الرصيد المتاح", value: `$${available.toFixed(2)}` },
+    { label: "السحوبات", value: wds.length.toString() },
+  ];
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-y-auto bg-background">
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>رجوع</Button>
-        <h1 className="text-base font-semibold">الإحالات</h1>
+    <div data-theme="dark" dir="rtl" className="min-h-[100dvh] bg-background text-foreground">
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-background/70 px-4 py-3 backdrop-blur-xl md:px-8">
+        <button onClick={() => navigate(-1)} className="text-sm text-white/60 hover:text-white transition">
+          ← رجوع
+        </button>
+        <p className="text-xs uppercase tracking-[0.25em] text-white/40">Megsy Affiliate</p>
       </header>
-      <div className="px-4 py-5">{content}</div>
+
+      <main className="mx-auto w-full max-w-6xl px-4 pb-24 md:px-8">
+        {/* Cinematic hero */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9 }}
+          className="relative mt-6 overflow-hidden rounded-3xl"
+        >
+          <img
+            src={referralBanner}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/85" />
+          <div className="relative z-10 px-6 py-16 text-center md:px-12 md:py-28">
+            <span className="inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-white/80 backdrop-blur">
+              برنامج الإحالة
+            </span>
+            <h1 className="mt-6 font-display text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tight leading-[0.95] text-white drop-shadow-2xl">
+              ادعُ. شارك.
+              <br />
+              <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">اكسب مدى الحياة.</span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-sm leading-relaxed text-white/85 md:text-lg">
+              عمولة 20% على كل اشتراك يقوم به أصدقاؤك — تتجدد شهرياً طالما بقوا معنا.
+            </p>
+
+            <div className="mx-auto mt-8 flex max-w-xl flex-col gap-2 rounded-2xl border border-white/15 bg-black/40 p-2 backdrop-blur sm:flex-row">
+              <input
+                value={link}
+                readOnly
+                dir="ltr"
+                className="flex-1 bg-transparent px-4 py-3 font-mono text-xs text-white/90 outline-none sm:text-sm"
+              />
+              <button
+                onClick={copyLink}
+                className="rounded-xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-6 py-3 text-sm font-bold text-black transition hover:opacity-90"
+              >
+                نسخ الرابط
+              </button>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Stats */}
+        <section className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {stats.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur"
+            >
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">{s.label}</p>
+              <p className="mt-3 font-display text-3xl font-black tracking-tight text-white md:text-4xl">
+                {s.value}
+              </p>
+            </motion.div>
+          ))}
+        </section>
+
+        {/* Promoter CTA — cinematic */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative mt-10 overflow-hidden rounded-3xl border border-[#FFD700]/30 bg-gradient-to-br from-[#1a1305] via-black to-black p-8 md:p-12"
+        >
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#FFA500]/20 blur-3xl" />
+          <div className="absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-[#FFD700]/15 blur-3xl" />
+          <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#FFD700]">شراكة رسمية</span>
+              <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight text-white md:text-5xl">
+                كن مروّجاً <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">رسمياً</span>
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/70 md:text-base">
+                عمولة تصل إلى 50% من الأرباح + اشتراك مجاني + مزايا حصرية. تواصل معنا الآن عبر واتساب وانضم إلى نخبة المروّجين.
+              </p>
+            </div>
+            <button
+              onClick={openPromoter}
+              className="self-start rounded-2xl bg-gradient-to-r from-[#FFD700] to-[#FFA500] px-8 py-4 text-sm font-bold uppercase tracking-wider text-black shadow-2xl shadow-[#FFA500]/30 transition hover:scale-[1.02]"
+            >
+              انضم عبر واتساب
+            </button>
+          </div>
+        </motion.section>
+
+        {/* Withdraw CTA */}
+        <section className="mt-10 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">جاهز للسحب</p>
+            <p className="mt-3 font-display text-4xl font-black text-white">${available.toFixed(2)}</p>
+            <button
+              onClick={() => navigate("/settings/withdraw")}
+              className="mt-5 w-full rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              سحب الأرباح
+            </button>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">كود الإحالة الخاص بك</p>
+            <p dir="ltr" className="mt-3 font-mono text-2xl font-bold text-white">{code}</p>
+            <button
+              onClick={copyLink}
+              className="mt-5 w-full rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              نسخ رابط الدعوة
+            </button>
+          </div>
+        </section>
+
+        {/* Tabs */}
+        <section className="mt-12">
+          <div className="inline-flex rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+            {([
+              ["referrals", "الإحالات"],
+              ["earnings", "الأرباح"],
+              ["withdrawals", "السحوبات"],
+            ] as const).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
+                  tab === k ? "bg-white text-black" : "text-white/60 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
+            {tab === "referrals" && (
+              refs.length === 0 ? (
+                <p className="p-10 text-center text-sm text-white/50">لا يوجد إحالات بعد.</p>
+              ) : refs.map((r, i) => (
+                <div key={r.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
+                  <p className="text-sm text-white/90">صديق #{i + 1}</p>
+                  <div className="flex items-center gap-3">
+                    <span className={`rounded-full border px-3 py-0.5 text-[11px] ${statusColor(r.status)}`}>
+                      {statusLabel(r.status)}
+                    </span>
+                    <span className="text-xs text-white/40">{fmtDate(r.created_at)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+
+            {tab === "earnings" && (
+              earns.length === 0 ? (
+                <p className="p-10 text-center text-sm text-white/50">لم تربح شيئاً بعد.</p>
+              ) : earns.map((e, i) => (
+                <div key={e.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
+                  <div>
+                    <p className="text-sm font-medium text-white/90">{e.source_action}</p>
+                    <p className="text-xs text-white/40">{fmtDate(e.created_at)}</p>
+                  </div>
+                  <p className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-lg font-black text-transparent">
+                    +${Number(e.amount).toFixed(2)}
+                  </p>
+                </div>
+              ))
+            )}
+
+            {tab === "withdrawals" && (
+              wds.length === 0 ? (
+                <p className="p-10 text-center text-sm text-white/50">لا يوجد طلبات سحب.</p>
+              ) : wds.map((w, i) => (
+                <div key={w.id} className={`flex items-center justify-between p-4 ${i ? "border-t border-white/5" : ""}`}>
+                  <div>
+                    <p className="text-sm font-medium text-white/90">${Number(w.amount).toFixed(2)}</p>
+                    <p className="text-xs text-white/40">{w.method} · {fmtDate(w.created_at)}</p>
+                  </div>
+                  <span className={`rounded-full border px-3 py-0.5 text-[11px] ${statusColor(w.status)}`}>
+                    {statusLabel(w.status)}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
