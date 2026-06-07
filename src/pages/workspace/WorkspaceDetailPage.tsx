@@ -22,59 +22,60 @@ export default function WorkspaceDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-background/75 backdrop-blur-xl border-b border-border/60">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 h-16 flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl border-b border-border">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate("/settings/workspaces")}
-            className="p-2 -ml-2 rounded-lg hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1.5 -ml-1.5 rounded-md hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Back"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-muted-foreground/40 text-sm">/</span>
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {(ctx.ws as any).avatar_url ? (
-              <img src={(ctx.ws as any).avatar_url} alt="" className="w-9 h-9 rounded-xl object-cover ring-1 ring-border/60" />
+              <img src={(ctx.ws as any).avatar_url} alt="" className="w-7 h-7 rounded object-cover ring-1 ring-border" />
             ) : (
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground grid place-items-center text-[13px] font-semibold shadow-sm">
+              <div className="w-7 h-7 rounded bg-foreground text-background grid place-items-center text-[11px] font-semibold">
                 {ctx.ws.name[0]?.toUpperCase()}
               </div>
             )}
-            <div className="min-w-0">
-              <h1 className="text-[14.5px] font-semibold text-foreground truncate leading-tight tracking-tight">{ctx.ws.name}</h1>
-              <p className="text-[11.5px] text-muted-foreground capitalize leading-tight mt-0.5 flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80" />
-                  {ctx.myRole || "member"}
-                </span>
-                <span className="text-muted-foreground/40">·</span>
-                <span className={`tabular-nums ${lowCredits ? "text-destructive font-medium" : ""}`}>{credits.toFixed(0)} credits</span>
-                {lowCredits && <AlertTriangle className="w-3 h-3 text-destructive" />}
-              </p>
+            <div className="min-w-0 flex items-center gap-2">
+              <h1 className="text-[13.5px] font-semibold text-foreground truncate tracking-tight">{ctx.ws.name}</h1>
+              <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-px rounded-sm border border-border">
+                <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                <span className="text-[9.5px] uppercase tracking-wider font-mono text-muted-foreground capitalize">{ctx.myRole || "member"}</span>
+              </span>
             </div>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 mr-1 font-mono text-[11.5px] tabular-nums">
+            <span className={lowCredits ? "text-destructive" : "text-foreground"}>{credits.toFixed(0)}</span>
+            <span className="text-muted-foreground/60">cr</span>
+            {lowCredits && <AlertTriangle className="w-3 h-3 text-destructive" />}
           </div>
           {ctx.canBilling && (
             <button
               onClick={() => navigate(`/settings/workspaces/${ctx.ws!.id}/billing`)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11.5px] font-medium bg-foreground text-background hover:opacity-90 transition-opacity"
             >
-              <Plus className="w-3.5 h-3.5" /> Top up
+              <Plus className="w-3 h-3" /> Top up
             </button>
           )}
           <PresenceBar workspaceId={ctx.ws.id} />
           <button
             onClick={() => setNavOpen((v) => !v)}
-            className="md:hidden p-2 rounded-lg hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+            className="md:hidden p-1.5 rounded-md hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-4 h-4" />
           </button>
         </div>
       </header>
 
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 py-12 grid grid-cols-1 md:grid-cols-[232px_1fr] gap-10 lg:gap-14 animate-fade-in">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-10 lg:gap-14 animate-fade-in">
         <aside className={`${navOpen ? "block" : "hidden"} md:block`}>
-          <div onClick={() => setNavOpen(false)} className="md:sticky md:top-24">
+          <div onClick={() => setNavOpen(false)} className="md:sticky md:top-20">
             <WorkspaceSideNav />
           </div>
         </aside>

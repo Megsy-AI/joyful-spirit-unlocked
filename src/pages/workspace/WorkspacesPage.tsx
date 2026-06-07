@@ -1,8 +1,7 @@
-// Workspaces list — richer card grid with credits meter, members, and quick actions.
+// Workspaces list — Vercel/Geist aesthetic: sharp borders, mono numerals, neutral surface.
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Plus, Sparkles, Lock, Users, Crown, Settings2, ArrowRight, Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeft, Loader2, Plus, Lock, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspaces } from "@/hooks/useWorkspace";
@@ -44,227 +43,186 @@ export default function WorkspacesPage() {
   const totalCredits = workspaces.reduce((sum, w) => sum + Number(w.credits ?? 0), 0);
 
   const body = (
-    <div className="space-y-10">
-      <div className="flex items-start justify-between gap-6 flex-wrap">
-        <div className="space-y-2 max-w-xl">
-          <h2 className="text-[28px] font-semibold tracking-tight text-foreground">Your workspaces</h2>
-          <p className="text-[14px] text-muted-foreground">
-            Switch between personal and team spaces. Each workspace has its own credits, members, and billing.
-          </p>
+    <div className="space-y-8">
+      {/* Header strip — Geist style: tiny meta + a stat */}
+      <div className="flex items-end justify-between gap-6 flex-wrap pb-6 border-b border-border">
+        <div className="space-y-1">
+          <p className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground font-medium">Overview</p>
+          <h2 className="text-[22px] font-semibold tracking-[-0.01em] text-foreground">Workspaces</h2>
         </div>
         {workspaces.length > 0 && (
-          <div className="rounded-xl border border-border bg-card px-4 py-3 min-w-[180px]">
-            <p className="text-[10.5px] uppercase tracking-wider text-muted-foreground/70 font-medium">Team credits</p>
-            <p className="text-[20px] font-semibold tabular-nums tracking-tight mt-0.5">{totalCredits.toFixed(0)}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">across {workspaces.length} space{workspaces.length === 1 ? "" : "s"}</p>
+          <div className="flex items-center gap-6 text-right">
+            <Stat label="Spaces" value={String(workspaces.length + 1)} />
+            <div className="h-8 w-px bg-border" />
+            <Stat label="Team credits" value={totalCredits.toFixed(0)} />
           </div>
         )}
       </div>
 
-      {/* Personal — always one card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <PersonalCard active={activeId === null} onSwitch={() => switchTo(null, "Personal")} />
+      {/* Rows — flat list, monospace ID-style numerals */}
+      <div className="border border-border rounded-md divide-y divide-border bg-card overflow-hidden">
+        <Row
+          name="Personal"
+          subtitle="Your private space"
+          monogram="P"
+          active={activeId === null}
+          right={null}
+          onSwitch={() => switchTo(null, "Personal")}
+          onOpen={null}
+        />
 
         {loading ? (
-          <div className="rounded-2xl border border-border bg-card grid place-items-center py-10">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <div className="px-4 py-6 grid place-items-center">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
           </div>
         ) : (
           workspaces.map((w) => (
-            <WorkspaceCard
+            <Row
               key={w.id}
               name={w.name}
-              credits={Number(w.credits ?? 0)}
+              subtitle={`${memberCounts[w.id] ?? 1} member${(memberCounts[w.id] ?? 1) === 1 ? "" : "s"} · Team`}
+              monogram={w.name[0]?.toUpperCase() ?? "W"}
               avatarUrl={w.avatar_url}
-              members={memberCounts[w.id] ?? 1}
               active={activeId === w.id}
+              right={
+                <span className={`font-mono text-[12px] tabular-nums ${Number(w.credits) < 50 ? "text-destructive" : "text-foreground"}`}>
+                  {Number(w.credits).toFixed(0)}
+                  <span className="text-muted-foreground/60 ml-1">cr</span>
+                </span>
+              }
               onSwitch={() => switchTo(w.id, w.name)}
               onOpen={() => navigate(`/settings/workspaces/${w.id}`)}
             />
           ))
         )}
-
-        {/* Create card lives inside the grid for a clean rhythm */}
-        {canCreate ? (
-          <button
-            onClick={() => navigate("/settings/workspaces/new")}
-            className="group rounded-2xl border border-dashed border-border hover:border-foreground/40 hover:bg-foreground/[0.02] transition-all duration-200 p-5 text-left flex flex-col gap-3 min-h-[148px] justify-center"
-          >
-            <div className="w-10 h-10 rounded-xl border border-dashed border-border grid place-items-center text-muted-foreground group-hover:text-foreground group-hover:border-foreground/40 transition-colors">
-              <Plus className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[14px] font-medium text-foreground">Create workspace</p>
-              <p className="text-[12.5px] text-muted-foreground mt-0.5">Invite teammates and share credits.</p>
-            </div>
-          </button>
-        ) : (
-          <button
-            onClick={() => navigate("/pricing")}
-            className="group rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.08] via-card to-card hover:border-primary/50 transition-all duration-200 p-5 text-left flex flex-col gap-3 min-h-[148px] justify-center relative overflow-hidden"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 grid place-items-center">
-              <Sparkles className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-[14px] font-medium text-foreground">Create workspace</p>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
-                  <Lock className="w-2.5 h-2.5" /> PRO
-                </span>
-              </div>
-              <p className="text-[12.5px] text-muted-foreground mt-0.5">Upgrade to unlock team workspaces.</p>
-            </div>
-            <span className="text-[12.5px] font-medium text-primary inline-flex items-center gap-1 mt-1">Upgrade <ArrowRight className="w-3 h-3" /></span>
-          </button>
-        )}
       </div>
+
+      {/* Create — Geist outlined CTA */}
+      {canCreate ? (
+        <button
+          onClick={() => navigate("/settings/workspaces/new")}
+          className="group w-full border border-dashed border-border rounded-md px-4 py-4 flex items-center gap-3 hover:border-foreground/40 hover:bg-foreground/[0.02] transition-colors text-left"
+        >
+          <div className="w-8 h-8 rounded border border-border grid place-items-center text-muted-foreground group-hover:text-foreground group-hover:border-foreground/40 transition-colors">
+            <Plus className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[13px] font-medium text-foreground">Create workspace</p>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Invite teammates and share credits.</p>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+        </button>
+      ) : (
+        <button
+          onClick={() => navigate("/pricing")}
+          className="group w-full border border-border rounded-md px-4 py-4 flex items-center gap-3 hover:border-foreground/40 transition-colors text-left bg-card"
+        >
+          <div className="w-8 h-8 rounded border border-border grid place-items-center text-muted-foreground">
+            <Lock className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-[13px] font-medium text-foreground">Create workspace</p>
+              <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wider px-1.5 py-px rounded-sm border border-border text-muted-foreground">
+                Pro
+              </span>
+            </div>
+            <p className="text-[12px] text-muted-foreground mt-0.5">Upgrade your plan to unlock team workspaces.</p>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+        </button>
+      )}
     </div>
   );
 
   if (!isMobile) {
     return (
       <DesktopSettingsLayout title="Workspaces" subtitle="Switch between personal and team spaces.">
-        <div className="max-w-4xl">{body}</div>
+        <div className="max-w-3xl">{body}</div>
       </DesktopSettingsLayout>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-3xl mx-auto px-6 sm:px-8 h-16 flex items-center gap-3">
+      <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md border-b border-border">
+        <div className="max-w-3xl mx-auto px-5 sm:px-6 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate("/settings")}
-            className="p-2 -ml-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
             aria-label="Back"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="text-[15px] font-medium text-foreground flex-1">Workspaces</h1>
+          <h1 className="text-[14px] font-medium text-foreground flex-1 tracking-tight">Workspaces</h1>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-6 sm:px-8 py-10">{body}</main>
+      <main className="max-w-3xl mx-auto px-5 sm:px-6 py-8">{body}</main>
     </div>
   );
 }
 
-function PersonalCard({ active, onSwitch }: { active: boolean; onSwitch: () => void }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 320, damping: 22 }}
-      className={`relative rounded-2xl border bg-card p-5 transition-colors ${
-        active ? "border-primary/40 ring-1 ring-primary/20" : "border-border hover:border-foreground/20"
-      }`}
-    >
-      {active && (
-        <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
-          <Check className="w-2.5 h-2.5" /> Current
-        </span>
-      )}
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-foreground to-foreground/70 text-background grid place-items-center text-[15px] font-semibold shrink-0">
-          P
-        </div>
-        <div className="min-w-0">
-          <p className="text-[14.5px] font-semibold text-foreground truncate">Personal</p>
-          <p className="text-[12px] text-muted-foreground mt-0.5">Your private space</p>
-        </div>
-      </div>
-      <div className="mt-4 flex items-center justify-end">
-        {!active && (
-          <button
-            onClick={onSwitch}
-            className="text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity"
-          >
-            Switch
-          </button>
-        )}
-      </div>
-    </motion.div>
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">{label}</p>
+      <p className="font-mono text-[18px] font-semibold tabular-nums tracking-tight text-foreground mt-0.5">{value}</p>
+    </div>
   );
 }
 
-function WorkspaceCard({
-  name, credits, avatarUrl, members, active, onSwitch, onOpen,
+function Row({
+  name, subtitle, monogram, avatarUrl, active, right, onSwitch, onOpen,
 }: {
   name: string;
-  credits: number;
+  subtitle: string;
+  monogram: string;
   avatarUrl?: string | null;
-  members: number;
   active: boolean;
+  right: React.ReactNode;
   onSwitch: () => void;
-  onOpen: () => void;
+  onOpen: (() => void) | null;
 }) {
-  // Visual credits meter: cap at 1000 for the bar, then it just stays full.
-  const pct = Math.min(100, (credits / 1000) * 100);
-  const low = credits < 50;
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 320, damping: 22 }}
-      className={`relative rounded-2xl border bg-card p-5 transition-colors ${
-        active ? "border-primary/40 ring-1 ring-primary/20" : "border-border hover:border-foreground/20"
-      }`}
-    >
-      {active && (
-        <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
-          <Check className="w-2.5 h-2.5" /> Current
-        </span>
+    <div className="group flex items-center gap-3 px-4 py-3 hover:bg-foreground/[0.015] transition-colors">
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="" className="w-9 h-9 rounded object-cover ring-1 ring-border shrink-0" />
+      ) : (
+        <div className="w-9 h-9 rounded bg-foreground text-background grid place-items-center text-[13px] font-semibold shrink-0">
+          {monogram}
+        </div>
       )}
-      <div className="flex items-center gap-3">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="w-11 h-11 rounded-xl object-cover shrink-0 ring-1 ring-border" />
-        ) : (
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground grid place-items-center text-[15px] font-semibold shrink-0">
-            {name[0]?.toUpperCase()}
-          </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-[13.5px] font-medium text-foreground truncate">{name}</p>
+          {active && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-px rounded-sm border border-border bg-background">
+              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+              <span className="text-[9.5px] uppercase tracking-wider font-mono text-muted-foreground">Active</span>
+            </span>
+          )}
+        </div>
+        <p className="text-[11.5px] text-muted-foreground truncate mt-0.5">{subtitle}</p>
+      </div>
+      {right && <div className="hidden sm:block shrink-0 mr-1">{right}</div>}
+      <div className="flex items-center gap-1 shrink-0">
+        {onOpen && (
+          <button
+            onClick={onOpen}
+            className="text-[11.5px] font-medium px-2 py-1 rounded border border-transparent text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+          >
+            Manage
+          </button>
         )}
-        <div className="min-w-0 flex-1">
-          <p className="text-[14.5px] font-semibold text-foreground truncate">{name}</p>
-          <p className="text-[12px] text-muted-foreground mt-0.5 flex items-center gap-2">
-            <Users className="w-3 h-3" />
-            <span className="tabular-nums">{members}</span>
-            <span className="text-muted-foreground/40">·</span>
-            <Crown className="w-3 h-3" />
-            <span>Team</span>
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground/70 font-medium">Credits</span>
-          <span className={`text-[12px] font-semibold tabular-nums ${low ? "text-destructive" : "text-foreground"}`}>
-            {credits.toFixed(0)}
-          </span>
-        </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${low ? "bg-destructive" : "bg-foreground"}`}
-            style={{ width: `${Math.max(4, pct)}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-end gap-1">
-        <button
-          onClick={onOpen}
-          className="text-[12.5px] font-medium px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-colors inline-flex items-center gap-1.5"
-          aria-label={`${name} settings`}
-        >
-          <Settings2 className="w-3.5 h-3.5" /> Manage
-        </button>
         {!active && (
           <button
             onClick={onSwitch}
-            className="text-[12.5px] font-medium px-3 py-1.5 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity"
+            className="text-[11.5px] font-medium px-2.5 py-1 rounded bg-foreground text-background hover:opacity-90 transition-opacity"
           >
             Switch
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
