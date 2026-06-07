@@ -4076,6 +4076,57 @@ Nothing to set up. Just tell me what you're working on and we'll go from there.`
                     </div>
                   )}
 
+                  {chatMenuView === "share" && (
+                    <div className="p-2">
+                      <button
+                        onClick={() => setChatMenuView("main")}
+                        className="flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground mb-2"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" /> Back
+                      </button>
+                      <div className="text-[13px] font-semibold text-foreground mb-1 px-1">Share chat</div>
+                      <p className="text-[11px] text-muted-foreground mb-3 px-1">Future messages aren't included</p>
+                      <div className="rounded-xl border border-border/40 overflow-hidden">
+                        <button
+                          onClick={() => { setShareMode("private"); setGeneratedShareUrl(null); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors ${shareMode === "private" ? "bg-accent/50" : "hover:bg-accent/30"}`}
+                        >
+                          <Lock className="w-3.5 h-3.5 text-foreground shrink-0" />
+                          <div className="text-left flex-1 min-w-0">
+                            <p className="text-[12.5px] font-semibold text-foreground">Keep private</p>
+                            <p className="text-[10.5px] text-muted-foreground">Only you have access</p>
+                          </div>
+                        </button>
+                        <div className="h-px bg-border/40" />
+                        <button
+                          onClick={() => { setShareMode("public"); if (!generatedShareUrl) void handleCreateShareLink("public"); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors ${shareMode === "public" ? "bg-accent/50" : "hover:bg-accent/30"}`}
+                        >
+                          <Globe className="w-3.5 h-3.5 text-foreground shrink-0" />
+                          <div className="text-left flex-1 min-w-0">
+                            <p className="text-[12.5px] font-semibold text-foreground">Create public link</p>
+                            <p className="text-[10.5px] text-muted-foreground">Anyone with the link can view</p>
+                          </div>
+                        </button>
+                      </div>
+                      {shareMode === "public" && (
+                        <div className="mt-3">
+                          {generatedShareUrl ? (
+                            <button
+                              onClick={handleCopyShareLink}
+                              className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-accent/40 hover:bg-accent/60 transition-colors"
+                            >
+                              <span className="text-[11.5px] text-foreground truncate" dir="ltr">{generatedShareUrl}</span>
+                              <Copy className="w-3.5 h-3.5 text-foreground shrink-0" />
+                            </button>
+                          ) : (
+                            <p className="text-center text-[11px] text-muted-foreground py-1">Generating link…</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {chatMenuView === "delete" && (
                     <div className="p-2">
                       <button
