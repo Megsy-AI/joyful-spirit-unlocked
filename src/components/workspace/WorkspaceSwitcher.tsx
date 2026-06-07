@@ -78,14 +78,24 @@ export default function WorkspaceSwitcher({ children, align = "start", side = "t
 
         {/* Footer actions */}
         <div className="border-t border-border py-1">
+          {activeId && (
+            <button
+              onClick={() => { setOpen(false); navigate(`/settings/workspaces/${activeId}`); }}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted text-left"
+            >
+              <Check className="w-4 h-4 text-primary" />
+              Manage current workspace
+            </button>
+          )}
           <button
-            onClick={() => navigate("/settings/workspaces")}
+            onClick={() => { setOpen(false); navigate("/settings/workspaces"); }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted text-left"
           >
             <Users className="w-4 h-4" />
-            Manage workspaces
+            All workspaces
           </button>
         </div>
+
       </PopoverContent>
     </Popover>
   );
