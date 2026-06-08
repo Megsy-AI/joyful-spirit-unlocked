@@ -455,17 +455,17 @@ export default function MegsyPrHomePage() {
       </header>
 
       {/* Greeting + Input centered */}
-      <main className="relative z-10 flex flex-col items-center justify-start min-h-[calc(100dvh-120px)] px-4 pt-6 md:pt-0 md:min-h-0">
+      <main className="relative z-10 flex flex-col items-center justify-start min-h-[calc(100dvh-120px)] px-4 pt-2 md:pt-0 md:min-h-0">
 
-      {/* Mobile hero — refined soft, breathable */}
-      <div className="md:hidden w-full mb-10 text-left px-2">
+      {/* Mobile hero — compact to fit viewport without scroll */}
+      <div className="md:hidden w-full mb-4 text-left px-2">
         <motion.h1
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="font-display uppercase text-[40px] leading-[0.92] tracking-tight text-foreground font-black"
+          className="font-display uppercase text-[28px] leading-[0.95] tracking-tight text-foreground font-black"
         >
-          What will<br />you{" "}
+          What will you{" "}
           <span className="text-primary">build</span>
           <span className="text-foreground/30">?</span>
         </motion.h1>
@@ -473,7 +473,7 @@ export default function MegsyPrHomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="mt-4 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground"
+          className="mt-1.5 text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground"
         >
           Create with precision
         </motion.p>
