@@ -989,7 +989,7 @@ function ProjectsTemplatesTabs({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[26px] md:text-5xl font-bold text-foreground leading-tight tracking-tight"
+            className="text-[20px] md:text-5xl font-bold text-foreground leading-tight tracking-tight"
           >
             {tab === "mine" ? "Your projects" : "Prompts"}
           </motion.h2>
