@@ -86,16 +86,27 @@ export default function NotificationsTab() {
           <span className="text-center">Email</span>
         </div>
         {EVENTS.map((e, i) => (
-          <div key={e.key} className={`grid grid-cols-[1fr_90px_90px] items-center px-5 py-4 hover:bg-foreground/[0.02] transition-colors ${i < EVENTS.length - 1 ? "border-b border-border/60" : ""}`}>
+          <div
+            key={e.key}
+            className={`grid grid-cols-[1fr_90px_90px] items-center px-5 py-4 hover:bg-foreground/[0.02] transition-colors ${i < EVENTS.length - 1 ? "border-b border-border/60" : ""}`}
+          >
             <div>
               <p className="text-[13.5px] font-medium text-foreground">{e.label}</p>
               <p className="text-[12px] text-muted-foreground mt-0.5">{e.desc}</p>
             </div>
             <div className="flex justify-center">
-              <Switch disabled={savingKey === `in_app:${e.key}`} checked={!!prefs.in_app[e.key]} onCheckedChange={(v) => toggle("in_app", e.key, v)} />
+              <Switch
+                disabled={savingKey === `in_app:${e.key}`}
+                checked={!!prefs.in_app[e.key]}
+                onCheckedChange={(v) => toggle("in_app", e.key, v)}
+              />
             </div>
             <div className="flex justify-center">
-              <Switch disabled={savingKey === `email:${e.key}`} checked={!!prefs.email[e.key]} onCheckedChange={(v) => toggle("email", e.key, v)} />
+              <Switch
+                disabled={savingKey === `email:${e.key}`}
+                checked={!!prefs.email[e.key]}
+                onCheckedChange={(v) => toggle("email", e.key, v)}
+              />
             </div>
           </div>
         ))}
