@@ -41,17 +41,24 @@ if (savedBubble) document.documentElement.style.setProperty("--user-bubble", sav
 (() => {
   const vv = window.visualViewport;
   if (!vv) return;
-  const update = () => {
-    // Only the on-screen keyboard should lift the fixed input. The address bar
-    // showing/hiding (and overscroll) also shrinks the visual viewport slightly,
-    // so ignore small deltas to avoid the input jumping up while scrolling.
-    const delta = window.innerHeight - vv.height;
-    const offset = delta > 120 ? delta : 0;
+  let raf = 0;
+  const apply = () => {
+    raf = 0;
+    // True keyboard height = layout viewport bottom - visual viewport bottom.
+    // Includes offsetTop so the bar doesn't drift when the visual viewport
+    // is scrolled (iOS scrolls focused inputs into view).
+    const delta = window.innerHeight - vv.height - vv.offsetTop;
+    const offset = delta > 120 ? Math.round(delta) : 0;
     document.documentElement.style.setProperty("--kb-offset", `${offset}px`);
   };
+  const update = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(apply);
+  };
   update();
-  // React to keyboard open/close only — NOT to scroll, which causes the bar to drift.
   vv.addEventListener("resize", update);
+  vv.addEventListener("scroll", update);
+  window.addEventListener("orientationchange", update);
 })();
 
 createRoot(document.getElementById("root")!).render(
