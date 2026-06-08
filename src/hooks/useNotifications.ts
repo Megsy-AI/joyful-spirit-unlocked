@@ -19,7 +19,9 @@ export const useNotifications = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       setUserId(null);
       setNotifications([]);
@@ -46,7 +48,9 @@ export const useNotifications = () => {
   }, []);
 
   const markAllRead = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     await supabase.rpc("mark_notifications_read", { p_user_id: user.id });
@@ -55,7 +59,9 @@ export const useNotifications = () => {
   }, []);
 
   const markOneRead = useCallback(async (notificationId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     await supabase.rpc("mark_notifications_read", {
