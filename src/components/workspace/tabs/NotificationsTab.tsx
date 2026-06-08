@@ -11,9 +11,14 @@ const EVENTS = [
   { key: "low_credits", label: "Low credits", desc: "When this workspace's credits run low." },
 ];
 
+type NotificationPrefs = {
+  in_app: Record<string, boolean>;
+  email: Record<string, boolean>;
+};
+
 export default function NotificationsTab() {
   const { ws, me } = useOutletContext<{ ws: WorkspaceCtx; me: string | null }>();
-  const [prefs, setPrefs] = useState<any>({ in_app: {}, email: {} });
+  const [prefs, setPrefs] = useState<NotificationPrefs>({ in_app: {}, email: {} });
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,12 +27,30 @@ export default function NotificationsTab() {
       const { data } = await supabase
         .from("workspace_notification_prefs")
         .select("*")
-        .eq("workspace_id", ws.id).eq("user_id", me).maybeSingle();
-      if (data) setPrefs({ in_app: (data as any).in_app, email: (data as any).email });
-      else setPrefs({
-        in_app: { member_joined: true, task_assigned: true, comment_mention: true, low_credits: true },
-        email: { member_joined: true, task_assigned: false, comment_mention: true, low_credits: true },
-      });
+        .eq("workspace_id", ws.id)
+        .eq("user_id", me)
+        .maybeSingle();
+      if (data) {
+        setPrefs({
+          in_app: (data.in_app ?? {}) as Record<string, boolean>,
+          email: (data.email ?? {}) as Record<string, boolean>,
+        });
+      } else {
+        setPrefs({
+          in_app: {
+            member_joined: true,
+            task_assigned: true,
+            comment_mention: true,
+            low_credits: true,
+          },
+          email: {
+            member_joined: true,
+            task_assigned: false,
+            comment_mention: true,
+            low_credits: true,
+          },
+        });
+      }
     })();
   }, [ws.id, me]);
 
@@ -35,11 +58,16 @@ export default function NotificationsTab() {
     const next = { ...prefs, [channel]: { ...prefs[channel], [key]: val } };
     setPrefs(next);
     setSavingKey(`${channel}:${key}`);
-    const { error } = await supabase.from("workspace_notification_prefs").upsert({
-      workspace_id: ws.id, user_id: me!,
-      in_app: next.in_app, email: next.email,
-      updated_at: new Date().toISOString(),
-    } as any, { onConflict: "workspace_id,user_id" });
+    const { error } = await supabase.from("workspace_notification_prefs").upsert(
+      {
+        workspace_id: ws.id,
+        user_id: me!,
+        in_app: next.in_app,
+        email: next.email,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "workspace_id,user_id" },
+    );
     if (error) setPrefs(prefs);
     setSavingKey(null);
   };
