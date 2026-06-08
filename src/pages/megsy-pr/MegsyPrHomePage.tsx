@@ -879,7 +879,7 @@ export default function MegsyPrHomePage() {
       </div>
 
       {/* Tabs: Projects / Prompts */}
-      <section className="relative z-10 w-full max-w-3xl md:max-w-6xl mt-16 md:mt-20 mb-24 px-1">
+      <section className="relative z-10 w-full max-w-3xl md:max-w-6xl mt-6 md:mt-20 mb-10 md:mb-24 px-1">
         <ProjectsTemplatesTabs
           projects={recentProjects}
           projectsLoading={projectsLoading}
