@@ -182,11 +182,17 @@ const NotificationBell = () => {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={10} className="w-[min(360px,calc(100vw-24px))] rounded-2xl border-border/70 bg-popover/95 p-0 shadow-[0_24px_70px_-32px_hsl(var(--foreground)/0.35)] backdrop-blur-xl">
+      <PopoverContent
+        align="end"
+        sideOffset={10}
+        className="w-[min(360px,calc(100vw-24px))] rounded-2xl border-border/70 bg-popover/95 p-0 shadow-[0_24px_70px_-32px_hsl(var(--foreground)/0.35)] backdrop-blur-xl"
+      >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/70">
           <div>
             <p className="text-sm font-semibold text-foreground">Notifications</p>
-            <p className="text-[11px] text-muted-foreground">{unreadCount ? `${unreadCount} unread` : "All caught up"}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {unreadCount ? `${unreadCount} unread` : "All caught up"}
+            </p>
           </div>
           {unreadCount > 0 && (
             <button
@@ -209,17 +215,20 @@ const NotificationBell = () => {
                 <Inbox className="w-4 h-4" />
               </div>
               <p className="text-sm font-medium text-foreground">No notifications</p>
-              <p className="mt-1 text-xs text-muted-foreground">New updates will appear here quietly.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                New updates will appear here quietly.
+              </p>
             </div>
           ) : (
-            <div className="space-y-1 p-2">
-              {notifications.slice(0, 12).map(renderItem)}
-            </div>
+            <div className="space-y-1 p-2">{notifications.slice(0, 12).map(renderItem)}</div>
           )}
         </ScrollArea>
         <div className="border-t border-border/70 px-4 py-3">
           <button
-            onClick={() => { setOpen(false); navigate("/settings/notifications"); }}
+            onClick={() => {
+              setOpen(false);
+              navigate("/settings/notifications");
+            }}
             className="text-xs text-muted-foreground hover:text-foreground w-full text-center transition-colors"
           >
             Notification settings
