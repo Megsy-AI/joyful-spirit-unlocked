@@ -980,7 +980,7 @@ function ProjectsTemplatesTabs({
   const [tab, setTab] = useState<"mine" | "prompts">("mine");
 
   return (
-    <div className="space-y-8 md:space-y-10">
+    <div className="space-y-4 md:space-y-10">
       {/* Header: stacked, breathable */}
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-6 px-1">
         <div className="space-y-1">
