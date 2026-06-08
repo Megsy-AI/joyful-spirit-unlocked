@@ -1,17 +1,33 @@
-import { Bell, CreditCard, Settings, Sparkles, Users, CheckCheck, UserPlus, Check, X, UserCheck, UserX, Loader2, Inbox } from "lucide-react";
+import {
+  Bell,
+  CreditCard,
+  Settings,
+  Sparkles,
+  Users,
+  CheckCheck,
+  UserPlus,
+  Check,
+  X,
+  UserCheck,
+  UserX,
+  Loader2,
+  Inbox,
+} from "lucide-react";
 import { useNotifications, type Notification } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+
+interface InviteRpcResult {
+  success?: boolean;
+  error?: string;
+  workspace_id?: string;
+}
 
 const typeConfig: Record<string, { icon: typeof Bell; className: string }> = {
   credits: { icon: CreditCard, className: "text-yellow-500" },
@@ -24,24 +40,28 @@ const typeConfig: Record<string, { icon: typeof Bell; className: string }> = {
 };
 
 const NotificationBell = () => {
-  const { notifications, unreadCount, loading, markAllRead, markOneRead } = useNotifications();
+  const { notifications, unreadCount, loading, markAllRead, markOneRead } =
+    useNotifications();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<Record<string, "accept" | "decline" | undefined>>({});
   const [handled, setHandled] = useState<Record<string, "accepted" | "declined" | undefined>>({});
 
   const handleInvite = async (n: Notification, action: "accept" | "decline") => {
-    const token = (n.metadata as any)?.invite_token as string | undefined;
+    const rawToken = n.metadata.invite_token;
+    const token = typeof rawToken === "string" ? rawToken : undefined;
     if (!token) {
       toast.error("Invite link is missing");
       return;
     }
-    setPending(p => ({ ...p, [n.id]: action }));
+    setPending((p) => ({ ...p, [n.id]: action }));
     try {
       const rpc = action === "accept" ? "workspace_accept_invite" : "workspace_decline_invite";
-      const { data, error } = await supabase.rpc(rpc as any, { p_token: token });
+      const { data, error } = await supabase.rpc(rpc, { p_token: token });
       if (error) throw error;
-      const result = data as any;
+      const result = (data && typeof data === "object" && !Array.isArray(data)
+        ? data
+        : {}) as InviteRpcResult;
       if (!result?.success) {
         const msg: Record<string, string> = {
           not_found: "Invite no longer exists",
@@ -52,7 +72,7 @@ const NotificationBell = () => {
         };
         throw new Error(msg[result?.error] || "Could not process invite");
       }
-      setHandled(h => ({ ...h, [n.id]: action === "accept" ? "accepted" : "declined" }));
+      setHandled((h) => ({ ...h, [n.id]: action === "accept" ? "accepted" : "declined" }));
       markOneRead(n.id);
       if (action === "accept") {
         toast.success("You joined the workspace");
@@ -60,10 +80,10 @@ const NotificationBell = () => {
       } else {
         toast.success("Invite declined");
       }
-    } catch (e: any) {
-      toast.error(e?.message || "Something went wrong");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
-      setPending(p => ({ ...p, [n.id]: undefined }));
+      setPending((p) => ({ ...p, [n.id]: undefined }));
     }
   };
 
