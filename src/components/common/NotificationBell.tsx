@@ -40,8 +40,7 @@ const typeConfig: Record<string, { icon: typeof Bell; className: string }> = {
 };
 
 const NotificationBell = () => {
-  const { notifications, unreadCount, loading, markAllRead, markOneRead } =
-    useNotifications();
+  const { notifications, unreadCount, loading, markAllRead, markOneRead } = useNotifications();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<Record<string, "accept" | "decline" | undefined>>({});
@@ -59,9 +58,9 @@ const NotificationBell = () => {
       const rpc = action === "accept" ? "workspace_accept_invite" : "workspace_decline_invite";
       const { data, error } = await supabase.rpc(rpc, { p_token: token });
       if (error) throw error;
-      const result = (data && typeof data === "object" && !Array.isArray(data)
-        ? data
-        : {}) as InviteRpcResult;
+      const result = (
+        data && typeof data === "object" && !Array.isArray(data) ? data : {}
+      ) as InviteRpcResult;
       if (!result?.success) {
         const msg: Record<string, string> = {
           not_found: "Invite no longer exists",
