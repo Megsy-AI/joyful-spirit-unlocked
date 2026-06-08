@@ -493,7 +493,6 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ErrorBoundary>
-            <Toaster />
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
