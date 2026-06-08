@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
 import type { WorkspaceCtx } from "@/hooks/useWorkspaceContext";
 
 const EVENTS = [
@@ -15,6 +14,7 @@ const EVENTS = [
 export default function NotificationsTab() {
   const { ws, me } = useOutletContext<{ ws: WorkspaceCtx; me: string | null }>();
   const [prefs, setPrefs] = useState<any>({ in_app: {}, email: {} });
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (!me) return;
@@ -34,12 +34,14 @@ export default function NotificationsTab() {
   const toggle = async (channel: "in_app" | "email", key: string, val: boolean) => {
     const next = { ...prefs, [channel]: { ...prefs[channel], [key]: val } };
     setPrefs(next);
-    await supabase.from("workspace_notification_prefs").upsert({
+    setSavingKey(`${channel}:${key}`);
+    const { error } = await supabase.from("workspace_notification_prefs").upsert({
       workspace_id: ws.id, user_id: me!,
       in_app: next.in_app, email: next.email,
       updated_at: new Date().toISOString(),
     } as any, { onConflict: "workspace_id,user_id" });
-    toast.success("Saved");
+    if (error) setPrefs(prefs);
+    setSavingKey(null);
   };
 
   return (
@@ -62,10 +64,10 @@ export default function NotificationsTab() {
               <p className="text-[12px] text-muted-foreground mt-0.5">{e.desc}</p>
             </div>
             <div className="flex justify-center">
-              <Switch checked={!!prefs.in_app[e.key]} onCheckedChange={(v) => toggle("in_app", e.key, v)} />
+              <Switch disabled={savingKey === `in_app:${e.key}`} checked={!!prefs.in_app[e.key]} onCheckedChange={(v) => toggle("in_app", e.key, v)} />
             </div>
             <div className="flex justify-center">
-              <Switch checked={!!prefs.email[e.key]} onCheckedChange={(v) => toggle("email", e.key, v)} />
+              <Switch disabled={savingKey === `email:${e.key}`} checked={!!prefs.email[e.key]} onCheckedChange={(v) => toggle("email", e.key, v)} />
             </div>
           </div>
         ))}
