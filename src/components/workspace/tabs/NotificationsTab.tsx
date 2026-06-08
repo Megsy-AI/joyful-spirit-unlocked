@@ -76,7 +76,9 @@ export default function NotificationsTab() {
     <div className="space-y-8 animate-fade-in">
       <div>
         <h2 className="text-[22px] font-semibold tracking-tight text-foreground">Notifications</h2>
-        <p className="text-[13px] text-muted-foreground mt-1">Choose how this workspace notifies you.</p>
+        <p className="text-[13px] text-muted-foreground mt-1">
+          Choose how this workspace notifies you.
+        </p>
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
