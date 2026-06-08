@@ -38,8 +38,9 @@ export const useNotifications = () => {
       .limit(50);
 
     if (data) {
-      setNotifications(data as unknown as Notification[]);
-      setUnreadCount(data.filter((n: any) => !n.read).length);
+      const rows = data as unknown as Notification[];
+      setNotifications(rows);
+      setUnreadCount(rows.filter((n) => !n.read).length);
     }
     setLoading(false);
   }, []);
@@ -49,7 +50,7 @@ export const useNotifications = () => {
     if (!user) return;
 
     await supabase.rpc("mark_notifications_read", { p_user_id: user.id });
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
   }, []);
 
@@ -61,10 +62,10 @@ export const useNotifications = () => {
       p_user_id: user.id,
       p_notification_ids: [notificationId],
     });
-    setNotifications(prev =>
-      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
     );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
   }, []);
 
   useEffect(() => {
@@ -79,12 +80,17 @@ export const useNotifications = () => {
       .channel(channelName)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
         (payload) => {
           const newNotif = payload.new as unknown as Notification;
-          setNotifications(prev => [newNotif, ...prev]);
-          setUnreadCount(prev => prev + 1);
-        }
+          setNotifications((prev) => [newNotif, ...prev]);
+          setUnreadCount((prev) => prev + 1);
+        },
       )
       .subscribe();
 
@@ -93,5 +99,12 @@ export const useNotifications = () => {
     };
   }, [userId]);
 
-  return { notifications, unreadCount, loading, markAllRead, markOneRead, refetch: fetchNotifications };
+  return {
+    notifications,
+    unreadCount,
+    loading,
+    markAllRead,
+    markOneRead,
+    refetch: fetchNotifications,
+  };
 };
