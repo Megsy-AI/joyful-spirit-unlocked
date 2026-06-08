@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, Camera, FileUp, Globe, Atom, Wrench, Lightbulb, ChevronRight } from "lucide-react";
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,48 +16,32 @@ interface ChatPlusSheetProps {
   onToggleSearch: () => void;
 }
 
-const sheetSpring = { type: "spring" as const, stiffness: 280, damping: 30 };
-const slimeSpring = { type: "spring" as const, stiffness: 180, damping: 14, mass: 0.9 };
+const spring = { type: "spring" as const, stiffness: 360, damping: 32 };
 
-interface TileProps {
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-  accent?: string;
-}
-
-const Tile = ({ icon, label, onClick, accent }: TileProps) => (
-  <motion.button
-    whileTap={{ scale: 0.94 }}
-    transition={sheetSpring}
-    onClick={onClick}
-    className="flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl bg-secondary/70 hover:bg-secondary transition-colors"
-  >
-    <div className={accent || "text-foreground/85"}>{icon}</div>
-    <span className="text-[12px] font-medium text-foreground/85">{label}</span>
-  </motion.button>
-);
-
-interface RowProps {
+interface ItemProps {
   icon: ReactNode;
   label: string;
   trailing?: ReactNode;
   onClick: () => void;
 }
 
-const Row = ({ icon, label, trailing, onClick }: RowProps) => (
-  <motion.button
-    whileTap={{ scale: 0.99 }}
+const Item = ({ icon, label, trailing, onClick }: ItemProps) => (
+  <button
     onClick={onClick}
-    className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-accent/30 transition-colors"
+    className="group w-full flex items-center gap-3 px-3 h-11 rounded-lg hover:bg-accent/60 active:bg-accent transition-colors"
   >
-    <div className="text-foreground/85">{icon}</div>
-    <span className="flex-1 text-left text-[15px] text-foreground/90">{label}</span>
-    <div className="flex items-center gap-1.5 text-muted-foreground">
-      {trailing}
-      <ChevronRight className="w-4 h-4" />
-    </div>
-  </motion.button>
+    <span className="w-5 h-5 flex items-center justify-center text-muted-foreground group-hover:text-foreground transition-colors">
+      {icon}
+    </span>
+    <span className="flex-1 text-left text-[14px] font-medium text-foreground/90">{label}</span>
+    {trailing}
+  </button>
+);
+
+const Kbd = ({ children }: { children: ReactNode }) => (
+  <span className="text-[10px] font-mono text-muted-foreground bg-secondary/70 border border-border/60 px-1.5 py-0.5 rounded">
+    {children}
+  </span>
 );
 
 export default function ChatPlusSheet({
@@ -70,14 +54,6 @@ export default function ChatPlusSheet({
   onToggleSearch,
 }: ChatPlusSheetProps) {
   const navigate = useNavigate();
-
-  // Slime stretch — pull-up exaggerates scaleY, pull-down shrinks it
-  const dragY = useMotionValue(0);
-  // negative drag (up) → grow; positive drag (down) → snap-close
-  const scaleY = useTransform(dragY, [-200, 0, 200], [1.18, 1, 0.96]);
-  const scaleX = useTransform(dragY, [-200, 0, 200], [0.94, 1, 1.02]);
-  const radius = useTransform(dragY, [-200, 0, 200], [40, 28, 22]);
-
   const go = (path: string) => { navigate(path); onClose(); };
 
   return (
@@ -88,79 +64,97 @@ export default function ChatPlusSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 z-[55] bg-foreground/10 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[55] bg-foreground/5"
           />
           <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={slimeSpring}
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0.6, bottom: 0.4 }}
-            style={{
-              y: dragY,
-              scaleY,
-              scaleX,
-              borderTopLeftRadius: radius,
-              borderTopRightRadius: radius,
-              transformOrigin: "bottom center",
-            }}
-            onDragEnd={(_, info) => {
-              if (info.offset.y > 100 || info.velocity.y > 500) onClose();
-            }}
-            className="fixed inset-x-0 bottom-0 z-[56] liquid-glass-milk overflow-hidden pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+            initial={{ y: 12, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 8, opacity: 0, scale: 0.98 }}
+            transition={spring}
+            style={{ transformOrigin: "bottom left" }}
+            className="fixed left-3 right-3 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[56] mx-auto max-w-[360px] rounded-2xl border border-border/70 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden"
           >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-2.5 pb-1 cursor-grab active:cursor-grabbing">
-              <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+            {/* Attachments group */}
+            <div className="p-1.5">
+              <Item
+                icon={<FileUp className="w-4 h-4" strokeWidth={1.75} />}
+                label="Add files"
+                trailing={<Kbd>F</Kbd>}
+                onClick={() => { onFiles(); onClose(); }}
+              />
+              <Item
+                icon={<Camera className="w-4 h-4" strokeWidth={1.75} />}
+                label="Take photo"
+                trailing={<Kbd>C</Kbd>}
+                onClick={() => { onCamera(); onClose(); }}
+              />
+              <Item
+                icon={<ImageIcon className="w-4 h-4" strokeWidth={1.75} />}
+                label="Upload image"
+                trailing={<Kbd>U</Kbd>}
+                onClick={() => { onPhotos(); onClose(); }}
+              />
             </div>
 
-            {/* Tile grid — Camera, Photos, Files */}
-            <div className="grid grid-cols-3 gap-2.5 px-4 pt-3 pb-4">
-              <Tile icon={<Camera className="w-[22px] h-[22px]" />} label="Camera" onClick={() => { onCamera(); onClose(); }} />
-              <Tile icon={<ImageIcon className="w-[22px] h-[22px]" />} label="Photos" onClick={() => { onPhotos(); onClose(); }} />
-              <Tile icon={<FileUp className="w-[22px] h-[22px]" />} label="Files" onClick={() => { onFiles(); onClose(); }} />
-            </div>
+            <div className="h-px bg-border/60 mx-3" />
 
-            {/* Rows */}
-            <div className="mx-4 rounded-2xl bg-secondary/50 overflow-hidden divide-y divide-border/30">
+            {/* Toggle */}
+            <div className="p-1.5">
               <button
                 onClick={onToggleSearch}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-accent/30 transition-colors"
+                className="w-full flex items-center gap-3 px-3 h-11 rounded-lg hover:bg-accent/60 transition-colors"
               >
-                <Globe className="w-[18px] h-[18px] text-foreground/85" />
-                <span className="flex-1 text-left text-[15px] text-foreground/90">Web search</span>
+                <span className="w-5 h-5 flex items-center justify-center text-muted-foreground">
+                  <Globe className="w-4 h-4" strokeWidth={1.75} />
+                </span>
+                <span className="flex-1 text-left text-[14px] font-medium text-foreground/90">Web search</span>
                 <span
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    searchEnabled ? "bg-primary" : "bg-foreground/20"
+                  className={`relative inline-flex h-[18px] w-8 items-center rounded-full transition-colors ${
+                    searchEnabled ? "bg-primary" : "bg-foreground/15"
                   }`}
                 >
                   <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                      searchEnabled ? "translate-x-5" : "translate-x-0.5"
+                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${
+                      searchEnabled ? "translate-x-[15px]" : "translate-x-0.5"
                     }`}
                   />
                 </span>
               </button>
-              <Row
-                icon={<Atom className="w-[18px] h-[18px]" />}
+            </div>
+
+            <div className="h-px bg-border/60 mx-3" />
+
+            {/* Navigation rows */}
+            <div className="p-1.5">
+              <Item
+                icon={<Atom className="w-4 h-4" strokeWidth={1.75} />}
                 label="Model"
-                trailing={<span className="text-[13px]">Lite</span>}
+                trailing={
+                  <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
+                    Lite
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                }
                 onClick={() => go("/settings/model")}
               />
-              <Row
-                icon={<Wrench className="w-[18px] h-[18px]" />}
-                label="Use tools"
-                onClick={() => go("/settings/integrations")}
-              />
-              <Row
-                icon={<Lightbulb className="w-[18px] h-[18px]" />}
+              <Item
+                icon={<Lightbulb className="w-4 h-4" strokeWidth={1.75} />}
                 label="Skills"
-                trailing={<span className="text-[13px]">13 enabled</span>}
+                trailing={
+                  <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
+                    13
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                }
                 onClick={() => go("/settings/skills")}
+              />
+              <Item
+                icon={<Wrench className="w-4 h-4" strokeWidth={1.75} />}
+                label="Integrations"
+                trailing={<ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                onClick={() => go("/settings/integrations")}
               />
             </div>
           </motion.div>
