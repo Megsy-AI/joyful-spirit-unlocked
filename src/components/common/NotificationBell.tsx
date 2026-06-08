@@ -99,11 +99,13 @@ const NotificationBell = () => {
         className={cn(
           "w-full rounded-xl px-3 py-3 transition-colors",
           !n.read ? "bg-accent/35" : "hover:bg-accent/20",
-          n.read && !isInvite && "opacity-70"
+          n.read && !isInvite && "opacity-70",
         )}
       >
         <button
-          onClick={() => { if (!isInvite) markOneRead(n.id); }}
+          onClick={() => {
+            if (!isInvite) markOneRead(n.id);
+          }}
           className="w-full text-left flex items-start gap-3"
         >
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -111,7 +113,9 @@ const NotificationBell = () => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-foreground truncate">{n.title}</p>
-            <p className="text-[12px] text-muted-foreground line-clamp-2 leading-relaxed">{n.message}</p>
+            <p className="text-[12px] text-muted-foreground line-clamp-2 leading-relaxed">
+              {n.message}
+            </p>
             <p className="text-[10px] text-muted-foreground mt-1">
               {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
             </p>
@@ -136,7 +140,11 @@ const NotificationBell = () => {
                   onClick={() => handleInvite(n, "accept")}
                   className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition disabled:opacity-50"
                 >
-                  {inFlight === "accept" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {inFlight === "accept" ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
                   Accept
                 </button>
                 <button
@@ -144,7 +152,11 @@ const NotificationBell = () => {
                   onClick={() => handleInvite(n, "decline")}
                   className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-foreground text-xs font-medium hover:bg-accent/50 transition disabled:opacity-50"
                 >
-                  {inFlight === "decline" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                  {inFlight === "decline" ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <X className="w-3.5 h-3.5" />
+                  )}
                   Decline
                 </button>
               </div>
