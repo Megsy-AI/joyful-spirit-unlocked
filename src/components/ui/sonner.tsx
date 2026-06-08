@@ -12,33 +12,33 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
-      position="top-center"
-      offset={"max(16px, env(safe-area-inset-top))" as unknown as number}
-      duration={3200}
-      visibleToasts={3}
-      gap={10}
+      position="bottom-center"
+      offset={"max(16px, env(safe-area-inset-bottom))" as unknown as number}
+      duration={1800}
+      visibleToasts={1}
+      gap={8}
       className="toaster group"
       toastOptions={{
         classNames: {
           toast: [
             "group toast pointer-events-auto",
-            "flex items-start gap-3 w-full",
-            "px-4 py-3",
-            "rounded-2xl",
-            "bg-popover/90 backdrop-blur-2xl backdrop-saturate-150",
+            "flex items-center gap-2.5 w-auto mx-auto",
+            "px-3.5 py-2",
+            "rounded-full",
+            "bg-popover/95 backdrop-blur-xl",
             "border border-border/60",
-            "shadow-[0_10px_40px_-12px_hsl(var(--foreground)/0.22),0_2px_6px_-2px_hsl(var(--foreground)/0.08)]",
+            "shadow-[0_8px_28px_-12px_hsl(var(--foreground)/0.18)]",
             "text-popover-foreground",
             "antialiased",
           ].join(" "),
-          title: "text-[14px] font-semibold leading-snug tracking-[-0.01em]",
+          title: "text-[13px] font-medium leading-snug tracking-[-0.01em]",
           description:
-            "text-[13px] font-normal leading-snug text-muted-foreground mt-0.5",
-          icon: "shrink-0 mt-0.5 [&_svg]:w-[18px] [&_svg]:h-[18px]",
+            "text-[12px] font-normal leading-snug text-muted-foreground",
+          icon: "shrink-0 [&_svg]:w-4 [&_svg]:h-4",
           actionButton:
-            "!bg-primary !text-primary-foreground rounded-full px-3 py-1.5 text-[12.5px] font-semibold hover:!bg-primary/90 transition",
+            "!bg-primary !text-primary-foreground rounded-full px-2.5 py-1 text-[12px] font-semibold hover:!bg-primary/90 transition",
           cancelButton:
-            "!bg-muted !text-muted-foreground rounded-full px-3 py-1.5 text-[12.5px] font-medium hover:!bg-muted/70 transition",
+            "!bg-muted !text-muted-foreground rounded-full px-2.5 py-1 text-[12px] font-medium hover:!bg-muted/70 transition",
           closeButton:
             "!bg-muted/60 hover:!bg-muted !text-foreground !border-transparent",
           success: "[&>[data-icon]]:text-emerald-500",
@@ -50,7 +50,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--width": "380px",
+          "--width": "auto",
         } as React.CSSProperties
       }
       {...props}
